@@ -1,0 +1,2061 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HL Chart — Hyperliquid Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  // unpkg이 막혀있는 환경(예: 채팅 내장 미리보기)을 대비해 jsDelivr로 자동 폴백
+  function loadScript(src){
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+  window.__chartLibReady = loadScript('https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js')
+    .catch(() => loadScript('https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js'))
+    .catch(() => { window.__chartLibFailed = true; });
+</script>
+<style>
+  :root{
+    --bg: #0a0d12;
+    --panel: #10141b;
+    --panel-2: #151a22;
+    --line: #212833;
+    --text: #e8ecf1;
+    --text-dim: #6b7686;
+    --accent: #4fd1c5;
+    --accent-dim: #2b8f86;
+    --up: #4fd1c5;
+    --down: #ef6f6f;
+    --amber: #e8a94f;
+  }
+  *{ box-sizing: border-box; }
+  html, body{ height:100%; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  .topbar{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:20px;
+    padding: 10px 18px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    flex-shrink:0;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+    margin-right: 6px;
+  }
+  .brand .mark{
+    width:9px; height:9px; border-radius:2px;
+    background: var(--accent);
+    display:inline-block;
+    transform: rotate(45deg);
+  }
+  .brand b{ font-size:15px; letter-spacing:0.2px; }
+  .brand span{ font-size:11px; color:var(--text-dim); font-family:'JetBrains Mono', monospace; }
+
+  .pairs{ position:relative; display:flex; align-items:center; gap:4px; background:var(--panel-2); padding:3px; border-radius:8px; }
+  .pairs button.pairbtn{
+    background:transparent; border:none; color:var(--text-dim);
+    font-family:'JetBrains Mono', monospace; font-size:12.5px; font-weight:600;
+    padding:6px 12px; border-radius:6px; cursor:pointer; transition:.15s;
+    white-space:nowrap;
+  }
+  .pairs button.pairbtn.active{ background: var(--accent); color:#04201d; }
+  .pairs button.pairbtn:hover:not(.active){ color:var(--text); }
+
+  .pairs button.pairbtn.fav-pair{
+    display:flex; flex-direction:column; align-items:flex-start; gap:1px;
+    padding:4px 12px; line-height:1.3;
+  }
+  .pairbtn .fav-name{ font-size:12.5px; }
+  .pairbtn .fav-price{ font-size:10px; font-weight:500; color:var(--text-dim); }
+  .pairbtn.active .fav-price{ color:#04201d; opacity:.75; }
+
+  .allpairs-toggle{
+    display:flex; align-items:center; gap:5px;
+    background:transparent; border:none; color:var(--text-dim);
+    font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:600;
+    padding:6px 10px; border-radius:6px; cursor:pointer; transition:.15s;
+    border-left: 1px solid var(--line); margin-left:2px;
+  }
+  .allpairs-toggle:hover{ color:var(--text); }
+  .allpairs-toggle.open{ color:var(--accent); }
+  .allpairs-toggle svg{ width:10px; height:10px; transition:transform .15s; }
+  .allpairs-toggle.open svg{ transform:rotate(180deg); }
+  .allpairs-toggle.on{ color: var(--accent); }
+  .allpairs-toggle.on #emaBandStateLabel{ color: var(--accent); opacity:1 !important; }
+
+  .interval-select{ position:relative; }
+
+  .spacer{ flex:1; }
+
+  .lang-switch{
+    display:flex; align-items:center; gap:2px;
+    background: var(--panel-2); padding:3px; border-radius:8px; flex-shrink:0;
+  }
+  .lang-btn{
+    background:transparent; border:none; color:var(--text-dim);
+    font-family:'JetBrains Mono', monospace; font-size:11px; font-weight:700;
+    padding:5px 9px; border-radius:6px; cursor:pointer; transition:.15s;
+  }
+  .lang-btn.active{ background: var(--accent); color:#04201d; }
+  .lang-btn:hover:not(.active){ color:var(--text); }
+
+  .trade-btn{
+    display:flex; align-items:center; gap:6px;
+    background: var(--accent); color:#04201d;
+    font-family:'Space Grotesk', sans-serif; font-size:12.5px; font-weight:700;
+    padding:7px 14px; border-radius:8px; text-decoration:none;
+    transition:.15s; flex-shrink:0; white-space:nowrap;
+  }
+  .trade-btn:hover{ background:#3fc0b3; }
+  .trade-btn svg{ width:12px; height:12px; }
+  .trade-btn .sub{ font-family:'JetBrains Mono', monospace; font-size:9.5px; font-weight:600; opacity:.7; }
+
+  .status{
+    display:flex; align-items:center; gap:7px;
+    font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--text-dim);
+  }
+  .dot{ width:7px; height:7px; border-radius:50%; background:var(--text-dim); transition:.2s; }
+  .dot.live{ background: var(--accent); box-shadow:0 0 8px var(--accent); }
+  .dot.err{ background: var(--down); }
+
+  /* 드롭다운 공통 */
+  .dropdown{
+    position:absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    width: 360px;
+    max-width: calc(100vw - 36px);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+    z-index: 50;
+    display:none;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  .dropdown.open{ display:flex; }
+  .dropdown-interval{ width: 220px; }
+  .dropdown-chart-type{ width: 180px; }
+  .dropdown-search{
+    padding:10px;
+    border-bottom:1px solid var(--line);
+  }
+  .dropdown-search input{
+    width:100%;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius:6px;
+    padding:7px 10px;
+    color:var(--text);
+    font-family:'JetBrains Mono', monospace;
+    font-size:12.5px;
+    outline:none;
+  }
+  .dropdown-search input:focus{ border-color: var(--accent-dim); }
+  .dropdown-tabs{
+    display:flex; gap:4px; padding: 8px 10px; overflow-x:auto;
+    border-bottom:1px solid var(--line);
+  }
+  .dropdown-tabs .tab{
+    flex-shrink:0;
+    background: var(--panel-2); border:none; color:var(--text-dim);
+    font-family:'JetBrains Mono', monospace; font-size:11px; font-weight:600;
+    padding:5px 10px; border-radius:6px; cursor:pointer; white-space:nowrap; transition:.15s;
+  }
+  .dropdown-tabs .tab:hover{ color:var(--text); }
+  .dropdown-tabs .tab.active{ background: var(--accent); color:#04201d; }
+  .dropdown-list{
+    overflow-y:auto;
+    max-height: 340px;
+  }
+  .dropdown-empty{
+    padding:16px 12px;
+    color:var(--text-dim);
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    text-align:center;
+  }
+  .dropdown-header{
+    padding: 8px 12px 4px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:0.5px;
+    color: var(--text-dim);
+    background: var(--panel);
+    position:sticky;
+    top:0;
+  }
+  .dropdown-row{
+    display:flex; align-items:center; gap:9px;
+    padding: 8px 12px;
+    cursor:pointer;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  .dropdown-row:hover{ background: var(--panel-2); }
+  .dropdown-row.active{ background: rgba(79,209,197,0.1); }
+  .dropdown-row.active .rlabel{ color: var(--accent); }
+  .dropdown-row .star{
+    background:none; border:none; cursor:pointer;
+    color: var(--text-dim); font-size:14px; line-height:1;
+    padding:2px; flex-shrink:0;
+  }
+  .dropdown-row .star.on{ color: var(--amber); }
+  .dropdown-row .rlabel{
+    font-family:'JetBrains Mono', monospace; font-size:12.5px; font-weight:600;
+    flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .dropdown-row .rtype{
+    font-family:'JetBrains Mono', monospace; font-size:9.5px; font-weight:700;
+    padding:2px 6px; border-radius:4px; letter-spacing:0.4px; flex-shrink:0;
+  }
+  .rtype.PERP{ background: rgba(79,209,197,0.12); color: var(--accent); }
+  .rtype.SPOT{ background: rgba(232,169,79,0.12); color: var(--amber); }
+  .rtype.HIP3{ background: rgba(160,130,255,0.14); color: #a082ff; }
+
+  .pricebar{
+    display:flex; align-items:center; gap:22px;
+    padding: 10px 18px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+    flex-shrink:0;
+    flex-wrap: wrap;
+  }
+  .pricebar .last{ font-family:'JetBrains Mono', monospace; font-size:22px; font-weight:700; }
+  .pricebar .chg{ font-family:'JetBrains Mono', monospace; font-size:13px; font-weight:600; padding:3px 8px; border-radius:5px; }
+  .chg.up{ color:var(--up); background:rgba(79,209,197,0.1); }
+  .chg.down{ color:var(--down); background:rgba(239,111,111,0.1); }
+  .stat{ font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--text-dim); }
+  .stat b{ color:var(--text); font-weight:600; }
+  .stat.note b{ color: var(--amber); font-weight:600; }
+
+  #chart{ flex:1; min-height:0; }
+
+  .footer{
+    padding:6px 18px; border-top:1px solid var(--line); background:var(--panel);
+    font-family:'JetBrains Mono', monospace; font-size:10.5px; color:var(--text-dim);
+    display:flex; justify-content:space-between; flex-shrink:0;
+  }
+  .footer a{ color:var(--text-dim); }
+
+  .banner{
+    display:none;
+    padding:9px 18px;
+    background: rgba(232,169,79,0.1);
+    border-bottom: 1px solid var(--line);
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    color: var(--amber);
+    flex-shrink:0;
+  }
+  .banner.show{ display:block; }
+</style>
+</head>
+<body>
+
+<div class="banner" id="netBanner" data-i18n="netBannerDefault"></div>
+
+<div class="topbar">
+  <div class="brand"><span class="mark"></span><b>HL Chart</b><span>v0.3</span></div>
+
+  <div class="pairs" id="pairs">
+    <button class="allpairs-toggle" id="allpairsToggle">
+      <span data-i18n="allPairs">All Pairs</span>
+      <svg viewBox="0 0 10 10" fill="none"><path d="M1 3L5 7L9 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+    <div class="dropdown" id="dropdown">
+      <div class="dropdown-search">
+        <input type="text" id="searchInput" data-i18n-placeholder="searchPlaceholder" autocomplete="off">
+      </div>
+      <div class="dropdown-tabs" id="dropdownTabs">
+        <button class="tab active" data-tab="ALL" data-i18n="tabAll">All</button>
+        <button class="tab" data-tab="FAV" data-i18n="tabFav">⭐ Favorites</button>
+        <button class="tab" data-tab="PERP">Perpetual</button>
+        <button class="tab" data-tab="HIP3">HIP-3</button>
+        <button class="tab" data-tab="SPOT">Spot</button>
+      </div>
+      <div class="dropdown-list" id="dropdownList"></div>
+    </div>
+  </div>
+
+  <div class="pairs interval-select" id="intervalFavRow">
+    <button class="allpairs-toggle" id="intervalToggle">
+      <span id="intervalToggleLabel">15m</span>
+      <svg viewBox="0 0 10 10" fill="none"><path d="M1 3L5 7L9 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+    <div class="dropdown dropdown-interval" id="intervalDropdown">
+      <div class="dropdown-list" id="intervalDropdownList"></div>
+    </div>
+  </div>
+
+  <div class="pairs interval-select" id="chartTypeRow">
+    <button class="allpairs-toggle" id="chartTypeToggle">
+      <span id="chartTypeLabel">Candles</span>
+      <svg viewBox="0 0 10 10" fill="none"><path d="M1 3L5 7L9 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+    </button>
+    <div class="dropdown dropdown-chart-type" id="chartTypeDropdown">
+      <div class="dropdown-list" id="chartTypeList"></div>
+    </div>
+  </div>
+
+  <div class="pairs" id="emaBandRow">
+    <button class="allpairs-toggle" id="emaBandToggle" data-i18n-title="emaToggleTitle">
+      <span data-i18n="emaBandLabel">EMA Band</span> <span id="emaBandStateLabel" style="opacity:.6">OFF</span>
+    </button>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="lang-switch" id="langSwitch">
+    <button class="lang-btn active" id="langBtnEn" data-lang="en">EN</button>
+    <button class="lang-btn" id="langBtnKr" data-lang="kr">KR</button>
+  </div>
+
+  <a class="trade-btn" id="tradeBtn" href="https://app.hyperliquid.xyz/join/10005000" target="_blank" rel="noopener noreferrer">
+    <span data-i18n="tradeBtn">Trade on Hyperliquid</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+  </a>
+  <div class="status"><span class="dot" id="statusDot"></span><span id="statusText" data-i18n="statusWaiting">Waiting to connect</span></div>
+</div>
+
+<div class="pricebar">
+  <div class="last" id="lastPrice">—</div>
+  <div class="chg" id="chgBox">—</div>
+  <div class="stat">O <b id="statO">—</b></div>
+  <div class="stat">H <b id="statH">—</b></div>
+  <div class="stat">L <b id="statL">—</b></div>
+  <div class="stat">C <b id="statC">—</b> <b id="statCPct">—</b></div>
+  <div class="stat" id="statLabelWrap" style="opacity:.6"><b id="statLabel">Today</b></div>
+  <div class="stat"><span data-i18n="stat24hVol">24h Volume</span> <b id="statVol">—</b></div>
+  <div class="stat" id="statOIWrap">OI <b id="statOI">—</b></div>
+  <div class="stat" id="statFundingWrap"><span data-i18n="statFunding">Funding (1h)</span> <b id="statFunding">—</b> <span style="opacity:.6"><span data-i18n="statUntilSettle">· until settle</span> <b id="fundingCountdown">--:--</b></span></div>
+  <div class="stat"><span data-i18n="statSymbol">Symbol</span> <b id="coinLabel">—</b></div>
+  <div class="stat note" id="tickNoteWrap" style="display:none">⚠ <b id="tickNoteText"></b></div>
+</div>
+
+<div id="chart"></div>
+
+<div class="footer">
+  <span>data: Hyperliquid public API (wss://api.hyperliquid.xyz/ws)</span>
+  <span id="lastUpdate">—</span>
+</div>
+
+<script>
+// =========================================================================
+// HL Chart 스크립트 구조 (목차)
+//   1. 인터벌/즐겨찾기 상수, 전역 state
+//   2. 가격 포맷터, info() REST 헬퍼
+//   3. 공용 드롭다운 컨트롤러 + 드롭다운 행(row) 생성 헬퍼
+//   4. 차트(lightweight-charts) 초기화
+//   5. 전체 페어 목록 로드 + 페어 즐겨찾기 + 페어 드롭다운
+//   6. 인터벌 즐겨찾기 + 인터벌 드롭다운
+//   7. REST: 캔들 히스토리 로드, agg/tick 캔들 합성
+//   8. 상단 바(가격/OHLC/24h 거래대금/OI/펀딩) 렌더링
+//   9. WebSocket 실시간 구독 (candle/trades/activeAssetCtx)
+//  10. 페어 선택 & 캔들 로딩 파이프라인 (selectPair)
+//  11. 인터벌 선택, 차트 유형 선택 + recreateMainSeries()
+//  12. 부팅(boot)
+// =========================================================================
+
+// ---------- i18n (EN 기본값, KR 전환 가능) ----------
+const I18N = {
+  en: {
+    netBannerDefault: '⚠ External network requests appear to be blocked. Save this HTML file locally and open it in a real browser (double-click or File > Open) instead of the in-chat preview.',
+    allPairs: 'All Pairs',
+    searchPlaceholder: 'Search symbol (e.g. BTC, GOLD, SOL…)',
+    tabAll: 'All',
+    tabFav: '⭐ Favorites',
+    emaToggleTitle: 'Toggle EMA Band indicator',
+    emaBandLabel: 'EMA Band',
+    tradeBtn: 'Trade on Hyperliquid',
+    statusWaiting: 'Waiting to connect',
+    stat24hVol: '24h Volume',
+    statFunding: 'Funding (1h)',
+    statUntilSettle: '· until settle',
+    statSymbol: 'Symbol',
+    today: 'Today',
+    selectedCandle: 'Selected candle',
+    updated: 'Updated ',
+    intervalGroupSeconds: 'Seconds (live trade-based)',
+    intervalGroupMinutes: 'Minutes',
+    intervalGroupHours: 'Hours',
+    intervalGroupDays: 'Day / Week / Month',
+    loadingAllPairs: 'Loading full pair list…',
+    noMatchingPairs: 'No matching pairs',
+    tickNoteSynth: 'Sub-minute candles are synthesized from recent trade data — history may be short',
+    tickNoteAgg: (base) => `Candle synthesized from ${base} bars`,
+    chartCandlestick: 'Candles',
+    chartHollow: 'Hollow Candles',
+    chartBar: 'Bar',
+    chartLine: 'Line',
+    chartArea: 'Area',
+    chartHeikinAshi: 'Heikin Ashi',
+    statusConnecting: 'Connecting…',
+    statusLive: (n) => `Live (${n} candles)`,
+    statusConnError: 'Connection error',
+    statusReconnecting: 'Disconnected · retrying…',
+    statusLoadingHistory: 'Loading history…',
+    statusError: (msg) => `Error: ${msg}`,
+    statusLoadingPairs: 'Loading pair list…',
+    statusPairLoadFailed: 'Failed to load pair list',
+    statusNoDefaultFav: 'Could not find a default favorite pair — pick one from "All Pairs"',
+    statusLibFailed: 'Failed to load chart library',
+    bannerLibFailed: 'Could not load the chart library (lightweight-charts). Download this file and open it in a real browser.',
+    bannerPairsFailed: 'Could not load the Hyperliquid pair list. Download this file and open it in a real browser.',
+    bannerWsBlocked: 'The live WebSocket connection was blocked. Download this file and open it in a real browser.',
+    bannerApiBlocked: 'The Hyperliquid API request was blocked. Download this file and open it in a real browser.',
+    tickSpanNote: (n, spanText) => `Sub-second candles are synthesized from trade data — Hyperliquid's API only provides the most recent ${n} trades (about ${spanText}), so older history is unavailable`,
+    aboutMin: (n) => `about ${n}m`,
+    aboutSec: (n) => `about ${n}s`,
+  },
+  kr: {
+    netBannerDefault: '⚠ 외부 네트워크 요청이 차단된 것으로 보입니다. 이 HTML 파일을 로컬에 저장한 뒤, 채팅 내 미리보기 대신 실제 브라우저(더블클릭 또는 파일 열기)로 직접 여세요.',
+    allPairs: '전체 페어',
+    searchPlaceholder: '심볼 검색 (예: BTC, GOLD, SOL…)',
+    tabAll: '전체',
+    tabFav: '⭐ 즐겨찾기',
+    emaToggleTitle: 'EMA Band 지표 켜기/끄기',
+    emaBandLabel: 'EMA밴드',
+    tradeBtn: 'Hyperliquid에서 거래하기',
+    statusWaiting: '연결 대기',
+    stat24hVol: '24h 거래대금',
+    statFunding: '펀딩(1h)',
+    statUntilSettle: '· 정산까지',
+    statSymbol: '코인심볼',
+    today: '오늘',
+    selectedCandle: '선택한 캔들',
+    updated: '업데이트 ',
+    intervalGroupSeconds: '초 (실시간 체결 기반)',
+    intervalGroupMinutes: '분',
+    intervalGroupHours: '시간',
+    intervalGroupDays: '일 / 주 / 월',
+    loadingAllPairs: '전체 페어 목록 불러오는 중…',
+    noMatchingPairs: '일치하는 페어가 없습니다',
+    tickNoteSynth: '초단위 캔들은 최근 체결(trade) 데이터로 합성 — 과거 데이터가 짧을 수 있음',
+    tickNoteAgg: (base) => `${base} 캔들을 합성해서 만든 봉`,
+    chartCandlestick: '캔들',
+    chartHollow: '할로우 캔들',
+    chartBar: '바',
+    chartLine: '라인',
+    chartArea: '영역',
+    chartHeikinAshi: '하이킨 아시',
+    statusConnecting: '연결 중…',
+    statusLive: (n) => `실시간 연결됨 (캔들 ${n}개)`,
+    statusConnError: '연결 오류',
+    statusReconnecting: '연결 끊김 · 재시도 중…',
+    statusLoadingHistory: '과거 데이터 로딩…',
+    statusError: (msg) => `오류: ${msg}`,
+    statusLoadingPairs: '페어 목록 불러오는 중…',
+    statusPairLoadFailed: '페어 목록 로드 실패',
+    statusNoDefaultFav: '즐겨찾기할 기본 페어를 찾지 못함 — "전체 페어"에서 직접 선택하세요',
+    statusLibFailed: '라이브러리 로드 실패',
+    bannerLibFailed: '차트 라이브러리(lightweight-charts)를 불러오지 못했습니다. 이 파일을 다운로드해서 실제 브라우저로 직접 열어보세요.',
+    bannerPairsFailed: 'Hyperliquid 페어 목록을 불러오지 못했습니다. 이 파일을 다운로드해서 실제 브라우저로 직접 열어보세요.',
+    bannerWsBlocked: '실시간 WebSocket 연결이 차단되었습니다. 이 파일을 다운로드해서 실제 브라우저로 직접 열어보세요.',
+    bannerApiBlocked: 'Hyperliquid API 요청이 차단되었습니다. 이 파일을 다운로드해서 실제 브라우저로 직접 열어보세요.',
+    tickSpanNote: (n, spanText) => `초단위 캔들은 체결 데이터로 합성 — Hyperliquid API가 최근 체결 ${n}건(${spanText} 분량)만 제공해서 과거 데이터는 이보다 길게 불러올 수 없음`,
+    aboutMin: (n) => `약 ${n}분`,
+    aboutSec: (n) => `약 ${n}초`,
+  },
+};
+
+function t(key, ...args) {
+  const dict = I18N[state.lang] || I18N.en;
+  const val = dict[key] !== undefined ? dict[key] : I18N.en[key];
+  return typeof val === 'function' ? val(...args) : val;
+}
+
+function applyLanguage() {
+  document.documentElement.lang = state.lang === 'kr' ? 'ko' : 'en';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    el.title = t(el.getAttribute('data-i18n-title'));
+  });
+  langBtnEn.classList.toggle('active', state.lang === 'en');
+  langBtnKr.classList.toggle('active', state.lang === 'kr');
+  // 동적으로 렌더링되는 목록/라벨들도 현재 언어로 다시 그림
+  renderIntervalFavorites();
+  renderChartTypeList();
+  const ct = CHART_TYPES.find(x => x.id === state.chartType);
+  if (ct) chartTypeLabel.textContent = t(ct.i18nKey);
+  if (dropdownDropdownOpen()) renderDropdownList(searchInput.value || '');
+
+  if (state.hoverCandle) {
+    renderCandleStats(state.hoverCandle, t('selectedCandle'));
+  } else if (state.todayCandle) {
+    renderCandleStats(state.todayCandle, t('today'));
+  }
+}
+function dropdownDropdownOpen(){
+  return typeof dropdownEl !== 'undefined' && dropdownEl && dropdownEl.classList.contains('open');
+}
+function setLanguage(lang) {
+  if (lang !== 'en' && lang !== 'kr') return;
+  state.lang = lang;
+  try { localStorage.setItem('hlchart_lang', lang); } catch(e) {}
+  applyLanguage();
+}
+
+// ---------- 인터벌 정의 ----------
+// native  : Hyperliquid candle API가 그대로 지원
+// agg     : 더 작은 native 캔들(base)을 클라이언트에서 합쳐서 만듦 (예: 2m = 1m x2)
+// tick    : 하이퍼리퀴드가 초단위 캔들을 지원하지 않으므로, 체결(trade) 데이터를 직접 버킷팅해서 만듦
+//           -> 과거 데이터는 recentTrades로 가져올 수 있는 만큼만 (보통 최근 수백 건) 제공됨
+const INTERVAL_META = {
+  '1s':  { kind: 'tick', ms: 1000 },
+  '5s':  { kind: 'tick', ms: 5000 },
+  '15s': { kind: 'tick', ms: 15000 },
+  '30s': { kind: 'tick', ms: 30000 },
+  '1m':  { kind: 'native' },
+  '2m':  { kind: 'agg', base: '1m', ms: 120000 },
+  '3m':  { kind: 'native' },
+  '5m':  { kind: 'native' },
+  '15m': { kind: 'native' },
+  '30m': { kind: 'native' },
+  '1h':  { kind: 'native' },
+  '2h':  { kind: 'native' },
+  '4h':  { kind: 'native' },
+  '8h':  { kind: 'native' },
+  '12h': { kind: 'native' },
+  '1d':  { kind: 'native' },
+  '1w':  { kind: 'native' },
+  '1M':  { kind: 'native' },
+};
+const INTERVAL_GROUPS = [
+  { titleKey: 'intervalGroupSeconds', items: ['1s', '5s', '15s', '30s'] },
+  { titleKey: 'intervalGroupMinutes', items: ['1m', '2m', '3m', '5m', '15m', '30m'] },
+  { titleKey: 'intervalGroupHours', items: ['1h', '2h', '4h', '8h', '12h'] },
+  { titleKey: 'intervalGroupDays', items: ['1d', '1w', '1M'] },
+];
+const MINUTES = {
+  '1m': 1, '3m': 3, '5m': 5, '15m': 15, '30m': 30,
+  '1h': 60, '2h': 120, '4h': 240, '8h': 480, '12h': 720,
+  '1d': 1440, '1w': 10080, '1M': 43200,
+};
+
+// 즐겨찾기 기본값: 후보 이름들 중 실제로 존재하는 걸 자동으로 찾음
+// (GOLD 자산은 시점에 따라 GOLD / XAU / XAUT / PAXG 등으로 표기가 바뀔 수 있어 여러 후보를 둠)
+const DEFAULT_FAVORITE_CANDIDATES = [
+  { label: 'BTC/USDC', candidates: ['BTC'] },
+  { label: 'GOLD/USDC', candidates: ['GOLD', 'XAU', 'XAUT', 'PAXG'] },
+  { label: 'HYPE/USDC', candidates: ['HYPE'] },
+];
+const DEFAULT_INTERVAL_FAVORITES = ['15m', '1h', '4h', '1d'];
+
+let state = {
+  lang: (function(){ try { return localStorage.getItem('hlchart_lang') || 'en'; } catch(e) { return 'en'; } })(),
+  interval: '15m',
+  coin: null,
+  label: null,
+  isSpot: false,
+  ws: null,
+  todayWs: null,          // 상단 바의 "오늘" 통계 전용 1d 구독 (선택된 인터벌과 무관하게 항상 정확한 오늘자 O/H/L/C 유지)
+  todayCandle: null,      // { time, open, high, low, close } - 오늘(UTC) 일봉
+  hoverCandle: null,      // 사용자가 차트에서 마우스 오버 중인 캔들(있으면 상단 바가 이 값을 대신 보여줌)
+  assetCtxWs: null,       // 24h 거래대금/OI/펀딩 전용 activeAssetCtx 구독
+  assetCtx: null,         // { isSpot, funding, openInterest, dayNtlVlm, markPx }
+  candleSeries: null,
+  chart: null,
+  lastCandle: null,
+  prevDayClose: null,
+  liveAgg: null,         // agg/tick 인터벌에서 현재 형성 중인 봉
+  gapTimer: null,        // 체결이 뜸할 때 flat 봉으로 이어붙이는 타이머
+  currentBars: [],       // 현재 차트에 로드된 전체 캔들 (뒤로 스크롤 시 앞에 이어붙임)
+  loadingMore: false,
+  noMoreHistory: false,
+  allPairs: [],          // { coin, label, type: 'PERP'|'SPOT', isHip3 }
+  allPairsLoaded: false,
+  favorites: [],         // { coin, label, type }
+  intervalFavorites: [...DEFAULT_INTERVAL_FAVORITES],
+  dropdownTab: 'ALL',
+  chartType: 'Candlestick', // 기본값
+  emaBandOn: false,     // EMA 밴드 지표 on/off
+  emaSeries: null,      // { max, min, avg, avg2 } 라인 시리즈들
+  emaCalc: null,        // 실시간 갱신용 { anchor, current, lastTime }
+  favoritePrices: {},    // { coin: 최근 1분봉 종가 } — 메인 차트와 동일하게 candle 구독의 종가를 사용
+  favoritePriceWs: {},   // { coin: WebSocket } 즐겨찾기별 1m candle 구독
+  favoritePriceEls: [],  // 즐겨찾기 버튼의 가격 라벨 엘리먼트 참조 [{coin, el}]
+};
+
+// ---------- 유효숫자 5자리 가격 포맷터 ----------
+function formatPrice(value) {
+  if (value == null || isNaN(value)) return '—';
+  const str = value.toPrecision(5);
+  if (!str.includes('e')) return str;
+  // 지수 표기(e)를 일반 소수 표기로 변환
+  const [mantissa, expStr] = str.split('e');
+  const exp = parseInt(expStr, 10);
+  const digits = mantissa.replace('.', '');
+  const dotPos = mantissa.indexOf('.');
+  const mantissaIntLen = dotPos === -1 ? mantissa.length : dotPos;
+  const newDotPos = mantissaIntLen + exp;
+  if (newDotPos <= 0) {
+    return '0.' + '0'.repeat(-newDotPos) + digits;
+  } else if (newDotPos >= digits.length) {
+    return digits + '0'.repeat(newDotPos - digits.length);
+  } else {
+    return digits.slice(0, newDotPos) + '.' + digits.slice(newDotPos);
+  }
+}
+
+// ---------- generic info() ----------
+async function info(body){
+  const res = await fetch('https://api.hyperliquid.xyz/info', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if(!res.ok) throw new Error('info endpoint ' + res.status);
+  return res.json();
+}
+
+// ---------- 공용 드롭다운 컨트롤러 ----------
+// 페어/인터벌/차트유형 드롭다운 3개가 전부 "토글 버튼 클릭 시 열고 닫기 + 다른 드롭다운은
+// 자동으로 닫기 + 바깥을 클릭하면 닫기"라는 동일한 동작을 각자 따로 구현하고 있던 걸
+// 하나의 팩토리로 통합. 각 드롭다운은 이 함수를 한 번씩 호출해서 컨트롤러를 만든다.
+const allDropdowns = [];
+function createDropdown(toggleEl, dropdownEl, onOpen){
+  const ctrl = {
+    isOpen: () => dropdownEl.classList.contains('open'),
+    open(){
+      allDropdowns.forEach(d => { if(d !== ctrl) d.close(); });
+      dropdownEl.classList.add('open');
+      toggleEl.classList.add('open');
+      if(onOpen) onOpen();
+    },
+    close(){
+      dropdownEl.classList.remove('open');
+      toggleEl.classList.remove('open');
+    },
+    toggle(){ ctrl.isOpen() ? ctrl.close() : ctrl.open(); },
+  };
+  ctrl.dropdownEl = dropdownEl;
+  ctrl.toggleEl = toggleEl;
+  toggleEl.onclick = (e) => { e.stopPropagation(); ctrl.toggle(); };
+  allDropdowns.push(ctrl);
+  return ctrl;
+}
+document.addEventListener('click', (e) => {
+  allDropdowns.forEach(d => {
+    if(d.isOpen() && !d.dropdownEl.contains(e.target) && e.target !== d.toggleEl) d.close();
+  });
+});
+
+// 드롭다운 목록의 행(row) 하나를 만드는 공용 헬퍼.
+// (★ 즐겨찾기 토글, 라벨, 타입 배지) 조합이 페어/인터벌/차트유형 드롭다운에서
+// 조금씩 다르게 반복되던 걸 옵션으로 표현되게 정리.
+function makeDropdownRow({ active, label, badge, star, onClick }){
+  const row = document.createElement('div');
+  row.className = 'dropdown-row' + (active ? ' active' : '');
+
+  if(star){
+    const starBtn = document.createElement('button');
+    starBtn.className = 'star' + (star.on ? ' on' : '');
+    starBtn.textContent = star.on ? '★' : '☆';
+    starBtn.onclick = (e) => { e.stopPropagation(); star.onClick(); };
+    row.appendChild(starBtn);
+  }
+
+  const labelEl = document.createElement('span');
+  labelEl.className = 'rlabel';
+  labelEl.textContent = label;
+  row.appendChild(labelEl);
+
+  if(badge){
+    const badgeEl = document.createElement('span');
+    badgeEl.className = 'rtype ' + badge.className;
+    badgeEl.textContent = badge.text;
+    row.appendChild(badgeEl);
+  }
+
+  row.onclick = onClick;
+  return row;
+}
+
+// ---------- status / banner helpers ----------
+function setStatus(text, mode){
+  document.getElementById('statusText').textContent = text;
+  const dot = document.getElementById('statusDot');
+  dot.className = 'dot' + (mode ? ' ' + mode : '');
+}
+function showNetBanner(msg){
+  const b = document.getElementById('netBanner');
+  if(msg) b.textContent = '⚠ ' + msg;
+  b.classList.add('show');
+}
+function showTickNote(meta){
+  const wrap = document.getElementById('tickNoteWrap');
+  const text = document.getElementById('tickNoteText');
+  if(meta.kind === 'tick'){
+    text.textContent = t('tickNoteSynth');
+    wrap.style.display = '';
+  }else if(meta.kind === 'agg'){
+    text.textContent = t('tickNoteAgg', meta.base);
+    wrap.style.display = '';
+  }else{
+    wrap.style.display = 'none';
+  }
+}
+
+// ---------- chart setup (라이브러리 로드를 기다린 후 초기화) ----------
+const chartEl = document.getElementById('chart');
+async function initChart(){
+  await window.__chartLibReady;
+  if(window.__chartLibFailed || typeof LightweightCharts === 'undefined'){
+    showNetBanner(t('bannerLibFailed'));
+    setStatus(t('statusLibFailed'), 'err');
+    return false;
+  }
+  state.chart = LightweightCharts.createChart(chartEl, {
+    layout: {
+      background: { color: '#0a0d12' },
+      textColor: '#6b7686',
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 11,
+    },
+    grid: {
+      vertLines: { color: '#151a22' },
+      horzLines: { color: '#151a22' },
+    },
+    rightPriceScale: { 
+      borderColor: '#212833', 
+      visible: true,
+      autoScale: true,
+      mode: LightweightCharts.PriceScaleMode.Normal,
+    },
+    leftPriceScale: { 
+      borderColor: '#212833', 
+      visible: true,
+      autoScale: true,
+    },
+    timeScale: { 
+      borderColor: '#212833', 
+      timeVisible: true, 
+      secondsVisible: true,
+      shiftVisibleRangeOnNewBar: true,
+    },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+    handleScroll: {
+      vertTouchDrag: true,
+      mouseWheel: true,
+      pressedMouseMove: true,
+      horzTouchDrag: true,
+    },
+    handleScale: {
+      axisPressedMouseMove: {
+        time: true,
+        price: true,
+      },
+      mouseWheel: true,
+      pinch: true,
+    },
+  });
+  state.candleSeries = state.chart.addCandlestickSeries({
+    upColor: '#4fd1c5',
+    downColor: '#ef6f6f',
+    borderVisible: false,
+    wickUpColor: '#4fd1c5',
+    wickDownColor: '#ef6f6f',
+    priceScaleId: 'right',
+    priceFormat: {
+      type: 'custom',
+      formatter: (price) => formatPrice(price),
+    },
+  });
+  state.chart.priceScale('right').applyOptions({
+    scaleMargins: { top: 0.08, bottom: 0.28 }, // 아래쪽을 거래량 자리로 비워둠
+  });
+
+  // 버그 수정: 캔들 종류를 바꿀 때마다 recreateMainSeries()가 right 가격축의 시리즈를
+  // 지웠다가 새로 만드는데, 그 순간 right 축에 붙은 시리즈가 0개가 되면
+  // lightweight-charts가 내부적으로 autoScale을 강제로 true로 되돌리고 가격 범위 캐시를
+  // 지워버림 -> 사용자가 드래그로 조절해둔 가격축 위치/줌이 초기화되는 원인이었음.
+  // -> right 축에 항상 붙어있는 보이지 않는 더미 시리즈를 하나 유지해서, 시리즈 개수가
+  //    절대 0이 되지 않게 막는다. (autoscale 계산에서도 invisible 시리즈는 제외되므로
+  //    이 더미 시리즈가 자동 스케일 범위에 영향을 주지도 않는다.)
+  state.priceScaleKeepAlive = state.chart.addLineSeries({
+    priceScaleId: 'right',
+    visible: false,
+    lastValueVisible: false,
+    priceLineVisible: false,
+    crosshairMarkerVisible: false,
+    // 중요: 이 더미 시리즈가 가격축의 "포맷 기준 시리즈"(dataSources[0])가 될 수도 있으므로
+    // 메인 시리즈와 동일한 커스텀 포맷터(formatPrice, 유효숫자 5자리)를 지정해야
+    // 캔들 종류를 바꿨을 때 가격축 소수점 자릿수가 기본값(2자리)으로 튀지 않는다.
+    priceFormat: {
+      type: 'custom',
+      formatter: (price) => formatPrice(price),
+    },
+  });
+  state.volumeSeries = state.chart.addHistogramSeries({
+    priceFormat: { type: 'volume' },
+    priceScaleId: 'left',
+  });
+  state.chart.priceScale('left').applyOptions({
+    scaleMargins: { top: 0.82, bottom: 0 },
+  });
+  new ResizeObserver(entries => {
+    const { width, height } = entries[0].contentRect;
+    state.chart.resize(width, height);
+  }).observe(chartEl);
+
+  // 상하 이동 문제 해결: 드래그 시 오토스케일 자동 해제
+  let isMouseDown = false;
+  chartEl.addEventListener('mousedown', () => { isMouseDown = true; });
+  window.addEventListener('mouseup', () => { isMouseDown = false; });
+  chartEl.addEventListener('mousemove', (e) => {
+    if (isMouseDown && (e.movementY !== 0)) {
+      const rs = state.chart.priceScale('right');
+      const ls = state.chart.priceScale('left');
+      // 오토스케일이 켜져 있으면 끄기 (수동 이동 모드로 진입)
+      rs.applyOptions({ autoScale: false });
+      ls.applyOptions({ autoScale: false });
+    }
+  });
+  state.chart.timeScale().subscribeVisibleLogicalRangeChange(range => {
+    if(range && range.from < 20) loadMoreHistory();
+  });
+
+  // 캔들에 마우스를 올리면 그 캔들의 O/H/L/C·%를 상단 바에 표시, 벗어나면 "오늘"로 복귀
+  state.chart.subscribeCrosshairMove(param => {
+    if(!param || !param.time){
+      if(state.hoverCandle){
+        state.hoverCandle = null;
+        renderTodayIfNotHovering();
+      }
+      return;
+    }
+    const bar = state.currentBars.find(b => b.time === param.time);
+    if(!bar) return;
+    state.hoverCandle = bar;
+    renderCandleStats(bar, t('selectedCandle'));
+  });
+  return true;
+}
+
+// ---------- 전체 페어 목록 로드 ----------
+async function loadAllPairs(){
+  const list = [];
+
+  const nativeMeta = await info({ type: 'meta' });
+  nativeMeta.universe.forEach(u => {
+    if(u.isDelisted) return;
+    list.push({ coin: u.name, label: u.name + '-PERP', type: 'PERP', isHip3: false });
+  });
+
+  try{
+    const dexs = await info({ type: 'perpDexs' });
+    for(const dex of dexs){
+      if(!dex || !dex.name) continue;
+      try{
+        const dexMeta = await info({ type: 'meta', dex: dex.name });
+        dexMeta.universe.forEach(u => {
+          if(u.isDelisted) return;
+          const coin = u.name.startsWith(dex.name + ':') ? u.name : `${dex.name}:${u.name}`;
+          const shortName = u.name.includes(':') ? u.name.split(':').pop() : u.name;
+          list.push({ coin, label: `${shortName}-PERP (${dex.name})`, type: 'PERP', isHip3: true });
+        });
+      }catch(e){ /* 개별 dex 실패는 건너뜀 */ }
+    }
+  }catch(e){ /* perpDexs 자체 실패는 무시 */ }
+
+  try{
+    const spotMeta = await info({ type: 'spotMeta' });
+    const tokenName = idx => {
+      const t = spotMeta.tokens.find(t => t.index === idx);
+      return t ? t.name : '?';
+    };
+    spotMeta.universe.forEach(pair => {
+      const base = tokenName(pair.tokens[0]);
+      const quote = tokenName(pair.tokens[1]);
+      const coin = pair.name === 'PURR/USDC' ? 'PURR/USDC' : `@${pair.index}`;
+      list.push({ coin, label: `${base}/${quote}`, type: 'SPOT', isHip3: false });
+    });
+  }catch(e){ /* spot 실패는 무시 */ }
+
+  return list;
+}
+
+function findByCandidates(candidates){
+  for(const name of candidates){
+    const perp = state.allPairs.find(p => p.type === 'PERP' && (p.coin === name || p.label.startsWith(name + '-PERP')));
+    if(perp) return perp;
+  }
+  for(const name of candidates){
+    const spot = state.allPairs.find(p => p.type === 'SPOT' && p.label.startsWith(name + '/'));
+    if(spot) return spot;
+  }
+  return null;
+}
+
+// ---------- 페어 즐겨찾기 ----------
+function renderFavorites(){
+  const pairsEl = document.getElementById('pairs');
+  const toggleBtn = document.getElementById('allpairsToggle');
+  [...pairsEl.querySelectorAll('.pairbtn')].forEach(b => b.remove());
+  state.favoritePriceEls = [];
+  state.favorites.forEach(fav => {
+    const b = document.createElement('button');
+    b.className = 'pairbtn fav-pair' + (state.coin === fav.coin ? ' active' : '');
+    b.onclick = () => selectPair(fav);
+
+    const nameEl = document.createElement('span');
+    nameEl.className = 'fav-name';
+    nameEl.textContent = fav.label.replace('-PERP', '');
+    b.appendChild(nameEl);
+
+    const priceEl = document.createElement('span');
+    priceEl.className = 'fav-price';
+    priceEl.textContent = '—';
+    b.appendChild(priceEl);
+
+    state.favoritePriceEls.push({ coin: fav.coin, el: priceEl });
+    pairsEl.insertBefore(b, toggleBtn);
+  });
+  updateFavoritePrices();
+}
+function isFavorite(coin){
+  return state.favorites.some(f => f.coin === coin);
+}
+function toggleFavorite(pair){
+  const idx = state.favorites.findIndex(f => f.coin === pair.coin);
+  if(idx >= 0) state.favorites.splice(idx, 1);
+  else state.favorites.push({ coin: pair.coin, label: pair.label, type: pair.type });
+  renderFavorites();
+  syncFavoritePriceSubscriptions();
+  renderDropdownList(document.getElementById('searchInput').value);
+}
+
+// 즐겨찾기 바로가기 버튼에 표시할 실시간 가격.
+// mid가격(allMids) 대신, 메인 차트가 가격을 가져오는 것과 완전히 동일한 방식
+// (candle 구독의 종가, connectTodayWs와 같은 패턴)을 그대로 재사용한다.
+// - 차트에 보이는 마지막 체결가와 항상 일치한다.
+// - coin 문자열을 그대로 구독에 쓰기 때문에 HIP-3 페어("dexname:SYMBOL")도 메인 차트와 동일하게 동작한다.
+function updateFavoritePrices(){
+  (state.favoritePriceEls || []).forEach(({ coin, el }) => {
+    const px = state.favoritePrices[coin];
+    el.textContent = px != null ? formatPrice(px) : '—';
+  });
+}
+
+function connectFavoritePriceWs(coin){
+  if(state.favoritePriceWs[coin]) return; // 이미 구독 중
+
+  // 웹소켓 첫 틱이 오기 전 공백을 없애기 위해 REST로 최근 1분봉을 먼저 채워둔다.
+  fetchHistory(coin, '1m').then(history => {
+    if(!Array.isArray(history) || !history.length) return;
+    if(!state.favoritePriceWs[coin]) return; // 그 사이 즐겨찾기 해제됨
+    state.favoritePrices[coin] = toChartCandle(history[history.length - 1]).close;
+    updateFavoritePrices();
+  }).catch(() => {});
+
+  const ws = new WebSocket('wss://api.hyperliquid.xyz/ws');
+  state.favoritePriceWs[coin] = ws;
+  ws.onopen = () => {
+    if(state.favoritePriceWs[coin] !== ws) return;
+    ws.send(JSON.stringify({ method: 'subscribe', subscription: { type: 'candle', coin, interval: '1m' } }));
+  };
+  ws.onmessage = (ev) => {
+    if(state.favoritePriceWs[coin] !== ws) return;
+    let msg;
+    try{ msg = JSON.parse(ev.data); }catch(e){ return; }
+    if(msg.channel !== 'candle' || !msg.data) return;
+    state.favoritePrices[coin] = toChartCandle(msg.data).close;
+    updateFavoritePrices();
+  };
+  ws.onclose = () => {
+    if(state.favoritePriceWs[coin] === ws){
+      delete state.favoritePriceWs[coin];
+      if(state.favorites.some(f => f.coin === coin)){
+        setTimeout(() => connectFavoritePriceWs(coin), 3000); // 여전히 즐겨찾기면 재연결
+      }
+    }
+  };
+  ws.onerror = () => {};
+}
+function disconnectFavoritePriceWs(coin){
+  const ws = state.favoritePriceWs[coin];
+  if(ws){
+    delete state.favoritePriceWs[coin];
+    try{ ws.close(); }catch(e){}
+  }
+}
+// 즐겨찾기 목록이 바뀔 때마다, 더 이상 필요없는 구독은 끊고 새로 추가된 코인만 구독한다.
+function syncFavoritePriceSubscriptions(){
+  const favCoins = new Set(state.favorites.map(f => f.coin));
+  Object.keys(state.favoritePriceWs).forEach(coin => {
+    if(!favCoins.has(coin)) disconnectFavoritePriceWs(coin);
+  });
+  favCoins.forEach(coin => connectFavoritePriceWs(coin));
+}
+
+// ---------- 페어 드롭다운 ----------
+const dropdownEl = document.getElementById('dropdown');
+const dropdownListEl = document.getElementById('dropdownList');
+const toggleBtn = document.getElementById('allpairsToggle');
+const searchInput = document.getElementById('searchInput');
+
+const pairsDropdown = createDropdown(toggleBtn, dropdownEl, () => {
+  searchInput.value = '';
+  renderDropdownList('');
+  setTimeout(() => searchInput.focus(), 0);
+});
+function closeDropdown(){ pairsDropdown.close(); }
+searchInput.addEventListener('input', (e) => renderDropdownList(e.target.value));
+
+
+const dropdownTabsEl = document.getElementById('dropdownTabs');
+dropdownTabsEl.querySelectorAll('.tab').forEach(btn => {
+  btn.onclick = () => {
+    state.dropdownTab = btn.dataset.tab;
+    [...dropdownTabsEl.querySelectorAll('.tab')].forEach(b => b.classList.toggle('active', b === btn));
+    renderDropdownList(searchInput.value);
+  };
+});
+
+function makePairRow(p){
+  return makeDropdownRow({
+    label: p.label,
+    badge: { className: p.isHip3 ? 'HIP3' : p.type, text: p.isHip3 ? 'HIP-3' : p.type },
+    star: { on: isFavorite(p.coin), onClick: () => toggleFavorite(p) },
+    onClick: () => { selectPair(p); closeDropdown(); },
+  });
+}
+
+function renderDropdownList(query){
+  const q = query.trim().toUpperCase();
+  if(!state.allPairsLoaded){
+    dropdownListEl.innerHTML = `<div class="dropdown-empty">${t('loadingAllPairs')}</div>`;
+    return;
+  }
+  let results = state.allPairs;
+  if(q){
+    results = results.filter(p => p.label.toUpperCase().includes(q) || p.coin.toUpperCase().includes(q));
+  }
+
+  const allGroups = [
+    { key: 'FAV', title: t('tabFav'), items: results.filter(p => isFavorite(p.coin)) },
+    { key: 'PERP', title: 'PERPETUAL', items: results.filter(p => p.type === 'PERP' && !p.isHip3).slice(0, 150) },
+    { key: 'HIP3', title: 'HIP-3', items: results.filter(p => p.type === 'PERP' && p.isHip3).slice(0, 150) },
+    { key: 'SPOT', title: 'SPOT', items: results.filter(p => p.type === 'SPOT').slice(0, 150) },
+  ];
+
+  const tab = state.dropdownTab || 'ALL';
+  const groups = (tab === 'ALL' ? allGroups : allGroups.filter(g => g.key === tab)).filter(g => g.items.length > 0);
+
+  if(groups.length === 0){
+    dropdownListEl.innerHTML = `<div class="dropdown-empty">${t('noMatchingPairs')}</div>`;
+    return;
+  }
+
+  dropdownListEl.innerHTML = '';
+  groups.forEach(g => {
+    const header = document.createElement('div');
+    header.className = 'dropdown-header';
+    header.textContent = `${g.title} (${g.items.length})`;
+    dropdownListEl.appendChild(header);
+    g.items.forEach(p => dropdownListEl.appendChild(makePairRow(p)));
+  });
+}
+
+// ---------- 인터벌 즐겨찾기 + 드롭다운 ----------
+const intervalToggle = document.getElementById('intervalToggle');
+const intervalToggleLabel = document.getElementById('intervalToggleLabel');
+const intervalDropdown = document.getElementById('intervalDropdown');
+const intervalDropdownList = document.getElementById('intervalDropdownList');
+const intervalFavRow = document.getElementById('intervalFavRow');
+
+function isIntervalFavorite(iv){ return state.intervalFavorites.includes(iv); }
+function toggleIntervalFavorite(iv){
+  const idx = state.intervalFavorites.indexOf(iv);
+  if(idx >= 0) state.intervalFavorites.splice(idx, 1);
+  else state.intervalFavorites.push(iv);
+  renderIntervalFavorites();
+  renderIntervalDropdown();
+}
+function renderIntervalFavorites(){
+  [...intervalFavRow.querySelectorAll('.pairbtn')].forEach(b => b.remove());
+  state.intervalFavorites.forEach(iv => {
+    const b = document.createElement('button');
+    b.className = 'pairbtn' + (state.interval === iv ? ' active' : '');
+    b.textContent = iv;
+    b.onclick = () => selectInterval(iv);
+    intervalFavRow.insertBefore(b, intervalToggle);
+  });
+}
+function renderIntervalDropdown(){
+  intervalDropdownList.innerHTML = '';
+  INTERVAL_GROUPS.forEach(g => {
+    const header = document.createElement('div');
+    header.className = 'dropdown-header';
+    header.textContent = t(g.titleKey);
+    intervalDropdownList.appendChild(header);
+    g.items.forEach(iv => {
+      intervalDropdownList.appendChild(makeDropdownRow({
+        active: iv === state.interval,
+        label: iv,
+        star: { on: isIntervalFavorite(iv), onClick: () => toggleIntervalFavorite(iv) },
+        onClick: () => { selectInterval(iv); closeIntervalDropdown(); },
+      }));
+    });
+  });
+}
+const intervalDropdownCtrl = createDropdown(intervalToggle, intervalDropdown, renderIntervalDropdown);
+function closeIntervalDropdown(){ intervalDropdownCtrl.close(); }
+
+
+// ---------- REST: native 캔들 history ----------
+// endTimeMs를 넘기면 그 시점 "이전" 최대 500개 캔들을 가져옴 (뒤로 스크롤할 때 과거 데이터 추가 로딩용)
+//
+// 주의: "인터벌 x 500개"만큼의 기간을 그대로 요청하면 3d/1w/1M 같은 긴 인터벌에서는
+// 요청 기간이 수년~수십 년(예: 1M x 500 ≈ 41년)까지 늘어난다. Hyperliquid 자체가
+// 2023년에 나왔고, HIP-3 페어는 대부분 그보다 훨씬 최근에 상장되었기 때문에 실제
+// 존재하는 데이터보다 훨씬 긴 기간을 요청하게 되고, 이때 API가 정상 배열이 아닌
+// 응답(에러 객체 등)을 주면 뒤에서 .map()이 그대로 터져서 차트가 안 뜨는 것처럼 보인다.
+// -> 실패하면 요청 기간을 자동으로 좁혀 재시도하고, 그래도 안 되면 실제 에러 내용을
+//    그대로 던져서 화면에 보이도록 한다(원인 진단용).
+async function fetchHistory(coin, interval, endTimeMs){
+  const end = endTimeMs || Date.now();
+  const fullSpanMs = MINUTES[interval] * 60000 * 500;
+  let spanMs = fullSpanMs;
+  let lastErr = null;
+  const MIN_SPAN_MS = 60000 * 60 * 24; // 최소 하루치까지만 좁힘
+
+  for(let attempt = 0; attempt < 8; attempt++){
+    const start = end - spanMs;
+    const res = await fetch('https://api.hyperliquid.xyz/info', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'candleSnapshot',
+        req: { coin, interval, startTime: start, endTime: end },
+      }),
+    });
+
+    if(res.ok){
+      let data;
+      try{
+        data = await res.json();
+      }catch(parseErr){
+        lastErr = new Error('candleSnapshot response parse failed: ' + parseErr.message);
+        if(spanMs <= MIN_SPAN_MS) throw lastErr;
+        spanMs = Math.floor(spanMs / 4);
+        continue;
+      }
+      if(Array.isArray(data)) return data;
+      // 배열이 아닌 응답(에러 객체 등) -> 기간을 좁혀서 재시도, 그래도 안 되면 그대로 노출
+      lastErr = new Error('candleSnapshot invalid response: ' + JSON.stringify(data).slice(0, 200));
+      if(spanMs <= MIN_SPAN_MS) throw lastErr;
+      spanMs = Math.floor(spanMs / 4);
+      continue;
+    }
+
+    // HTTP 에러 -> 본문까지 확보해서 실제 원인을 남기고, 기간을 좁혀 재시도
+    let bodyText = '';
+    try{ bodyText = await res.text(); }catch(e){}
+    lastErr = new Error('candleSnapshot ' + res.status + (bodyText ? (' — ' + bodyText.slice(0, 200)) : ''));
+    if(spanMs <= MIN_SPAN_MS) throw lastErr;
+    spanMs = Math.floor(spanMs / 4);
+  }
+  throw lastErr || new Error('candleSnapshot unknown error');
+}
+function toChartCandle(c){
+  return {
+    time: Math.floor(c.t / 1000),
+    open: parseFloat(c.o),
+    high: parseFloat(c.h),
+    low: parseFloat(c.l),
+    close: parseFloat(c.c),
+    volume: parseFloat(c.v || 0),
+  };
+}
+function volPoint(bar){
+  return {
+    time: bar.time,
+    value: bar.volume || 0,
+    color: bar.close >= bar.open ? 'rgba(79,209,197,0.5)' : 'rgba(239,111,111,0.5)',
+  };
+}
+
+// ---------- agg(합성 분봉) / tick(체결 기반 초봉) 빌더 ----------
+// 체결이 없던 구간은 빈칸으로 남기지 않고, 직전 종가로 이어진 얇은(flat) 봉으로 채워서
+// "접속한 시점부터만 보이는" 것처럼 보이는 문제를 줄인다.
+function fillGaps(bars, bucketSec){
+  if(bars.length < 2) return bars;
+  const filled = [];
+  for(let i = 0; i < bars.length; i++){
+    filled.push(bars[i]);
+    if(i < bars.length - 1){
+      let t = bars[i].time + bucketSec;
+      while(t < bars[i + 1].time){
+        filled.push({ time: t, open: bars[i].close, high: bars[i].close, low: bars[i].close, close: bars[i].close, volume: 0 });
+        t += bucketSec;
+      }
+    }
+  }
+  return filled;
+}
+
+function buildAggCandles(candles1m, ms){
+  const bars = [];
+  let cur = null;
+  candles1m.forEach(c => {
+    const bucketSec = Math.floor((c.time * 1000) / ms) * (ms / 1000);
+    if(!cur || cur.time !== bucketSec){
+      if(cur) bars.push(cur);
+      cur = { time: bucketSec, open: c.open, high: c.high, low: c.low, close: c.close, volume: c.volume || 0 };
+    }else{
+      cur.high = Math.max(cur.high, c.high);
+      cur.low = Math.min(cur.low, c.low);
+      cur.close = c.close;
+      cur.volume += (c.volume || 0);
+    }
+  });
+  if(cur) bars.push(cur);
+  return bars;
+}
+// 실시간 WS 캔들의 버킷 시간이 과거 REST 스냅샷의 마지막 봉 시간과 어긋나는 경우가 있다
+// (3d처럼 "표준적이지 않은" 간격에서 특히). 시간이 역행하거나 같으면 새 봉을 push하지 않고
+// 마지막 봉에 병합해서, series에 넘기는 시간이 항상 오름차순을 유지하도록 만든다.
+// (안 그러면 lightweight-charts가 매 틱마다 내부에서 에러를 던진다)
+function normalizeLiveBar(c){
+  const arr = state.currentBars;
+  if(!arr.length) return c;
+  const last = arr[arr.length - 1];
+  if(c.time > last.time) return c;
+  if(c.time === last.time) return c;
+  // c.time < last.time: 어긋난 버킷 -> 마지막 봉에 병합
+  console.warn('[HL Chart] 라이브 캔들 시간 역행 감지 -> 마지막 봉에 병합', { liveTime: c.time, lastTime: last.time });
+  return {
+    time: last.time,
+    open: last.open,
+    high: Math.max(last.high, c.high),
+    low: Math.min(last.low, c.low),
+    close: c.close,
+    volume: c.volume,
+  };
+}
+
+// state.currentBars는 "뒤로 스크롤 시 과거 데이터 추가 로딩"의 기준(state.currentBars[0])으로 쓰이는데,
+// series.update()로만 갱신하면 이 배열이 최신 라이브 봉을 못 따라가서 나중에 loadMoreHistory가
+// setData할 때 방금 들어온 라이브 봉을 지워버리는 문제가 생긴다. 그래서 라이브 갱신마다 같이 반영한다.
+function pushOrUpdateBar(bar){
+  const arr = state.currentBars;
+  if(arr.length && arr[arr.length - 1].time === bar.time) arr[arr.length - 1] = bar;
+  else arr.push(bar);
+  updateEmaBandLive(bar);
+}
+
+function updateSeriesWithCandle(c) {
+  if (state.chartType === 'HeikinAshi') {
+    // 하이킨 아시는 이전 HA 봉이 필요하므로 전체 재계산이 안전함
+    // 실시간 업데이트 효율을 위해 마지막 봉만 업데이트하는 로직은 복잡하므로 여기선 전체 갱신 호출
+    recreateMainSeries();
+  } else if (state.chartType === 'Line' || state.chartType === 'Area') {
+    state.candleSeries.update({ time: c.time, value: c.close });
+  } else {
+    state.candleSeries.update(c);
+  }
+}
+
+function ingestAggCandle(c, ms){
+  const bucketSec = Math.floor((c.time * 1000) / ms) * (ms / 1000);
+  if(!state.liveAgg || state.liveAgg.time !== bucketSec){
+    state.liveAgg = { time: bucketSec, open: c.open, high: c.high, low: c.low, close: c.close, volume: c.volume || 0, _sub: { [c.time]: c.volume || 0 } };
+  }else{
+    state.liveAgg.high = Math.max(state.liveAgg.high, c.high);
+    state.liveAgg.low = Math.min(state.liveAgg.low, c.low);
+    state.liveAgg.close = c.close;
+    if(!state.liveAgg._sub) state.liveAgg._sub = {};
+    state.liveAgg._sub[c.time] = c.volume || 0;
+    state.liveAgg.volume = Object.values(state.liveAgg._sub).reduce((a, b) => a + b, 0);
+  }
+  updateSeriesWithCandle(state.liveAgg);
+  state.volumeSeries.update(volPoint(state.liveAgg));
+  state.lastCandle = state.liveAgg;
+  pushOrUpdateBar(state.liveAgg);
+  updatePriceBar(state.liveAgg, state.prevDayClose);
+}
+function buildTickCandles(trades, ms){
+  const sorted = [...trades].sort((a, b) => a.time - b.time);
+  const bars = [];
+  let cur = null;
+  sorted.forEach(t => {
+    const bucketSec = Math.floor(t.time / ms) * (ms / 1000);
+    const price = parseFloat(t.px);
+    const sz = parseFloat(t.sz || 0);
+    if(!cur || cur.time !== bucketSec){
+      if(cur) bars.push(cur);
+      cur = { time: bucketSec, open: price, high: price, low: price, close: price, volume: sz };
+    }else{
+      cur.high = Math.max(cur.high, price);
+      cur.low = Math.min(cur.low, price);
+      cur.close = price;
+      cur.volume += sz;
+    }
+  });
+  if(cur) bars.push(cur);
+  return bars;
+}
+function ingestTick(t, ms){
+  const bucketSec = Math.floor(t.time / ms) * (ms / 1000);
+  const price = parseFloat(t.px);
+  const sz = parseFloat(t.sz || 0);
+  if(!state.liveAgg || state.liveAgg.time !== bucketSec){
+    state.liveAgg = { time: bucketSec, open: price, high: price, low: price, close: price, volume: sz };
+  }else{
+    state.liveAgg.high = Math.max(state.liveAgg.high, price);
+    state.liveAgg.low = Math.min(state.liveAgg.low, price);
+    state.liveAgg.close = price;
+    state.liveAgg.volume += sz;
+  }
+  updateSeriesWithCandle(state.liveAgg);
+  state.volumeSeries.update(volPoint(state.liveAgg));
+  state.lastCandle = state.liveAgg;
+  pushOrUpdateBar(state.liveAgg);
+  updatePriceBar(state.liveAgg, state.prevDayClose);
+}
+
+// 상단 큰 가격 + 그 옆 %는 항상 "현재가 / 오늘 등락률" — 캔들에 마우스를 올려도 바뀌지 않는다
+function renderTopPrice(){
+  if(!state.todayCandle) return;
+  document.getElementById('lastPrice').textContent = formatPrice(state.todayCandle.close);
+  const pct = state.todayCandle.open ? ((state.todayCandle.close - state.todayCandle.open) / state.todayCandle.open) * 100 : NaN;
+  const chgBox = document.getElementById('chgBox');
+  if(Number.isFinite(pct)){
+    chgBox.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+    chgBox.className = 'chg ' + (pct >= 0 ? 'up' : 'down');
+  }else{
+    chgBox.textContent = '—';
+    chgBox.className = 'chg';
+  }
+}
+
+// O/H/L/C 블록 — 마우스를 올린 캔들이 있으면 그 캔들, 없으면 "오늘" 캔들. 종가(C) 옆 %는
+// 그 캔들 자체의 등락률((종가-시가)/시가)이며, 위쪽 상단 %(항상 오늘 기준)와는 별개다.
+function renderCandleStats(candle, label){
+  document.getElementById('statO').textContent = formatPrice(candle.open);
+  document.getElementById('statH').textContent = formatPrice(candle.high);
+  document.getElementById('statL').textContent = formatPrice(candle.low);
+  document.getElementById('statC').textContent = formatPrice(candle.close);
+  document.getElementById('statLabel').textContent = label || '';
+  const pct = candle.open ? ((candle.close - candle.open) / candle.open) * 100 : NaN;
+  const pctEl = document.getElementById('statCPct');
+  if(Number.isFinite(pct)){
+    pctEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+    pctEl.style.color = pct >= 0 ? 'var(--up)' : 'var(--down)';
+  }else{
+    pctEl.textContent = '—';
+    pctEl.style.color = '';
+  }
+  document.getElementById('lastUpdate').textContent = t('updated') + new Date().toLocaleTimeString(state.lang === 'kr' ? 'ko-KR' : 'en-US');
+}
+
+// 오늘 캔들이 갱신될 때마다 호출: 상단 가격/%는 항상 갱신하고,
+// O/H/L/C 블록은 지금 다른 캔들에 마우스를 올려서 보고 있지 않을 때만 "오늘"로 갱신한다.
+function renderTodayIfNotHovering(){
+  if(!state.todayCandle) return;
+  renderTopPrice();
+  if(state.hoverCandle) return;
+  renderCandleStats(state.todayCandle, t('today'));
+}
+
+// 메인 차트 실시간 틱마다 호출됨(상단 바의 "오늘" 통계 자체는 선택된 인터벌과 무관하게
+// 정확하도록 별도의 1d 구독(state.todayWs)이 전담한다). 여기서는 업데이트 시각만 갱신.
+function updatePriceBar(_candle){
+  const el = document.getElementById('lastUpdate');
+  if(el) el.textContent = t('updated') + new Date().toLocaleTimeString(state.lang === 'kr' ? 'ko-KR' : 'en-US');
+}
+
+// ---------- 상단 바: 24h 거래대금 / OI / 펀딩 (activeAssetCtx 실시간 구독) ----------
+function formatBigNumber(n){
+  if(!Number.isFinite(n)) return '—';
+  const sign = n < 0 ? '-' : '';
+  const abs = Math.abs(n);
+  if(abs >= 1e9) return sign + (abs / 1e9).toFixed(2) + 'B';
+  if(abs >= 1e6) return sign + (abs / 1e6).toFixed(2) + 'M';
+  if(abs >= 1e3) return sign + (abs / 1e3).toFixed(2) + 'K';
+  return sign + abs.toFixed(2);
+}
+
+function renderAssetCtx(){
+  const ctx = state.assetCtx;
+  document.getElementById('statVol').textContent = ctx && Number.isFinite(ctx.dayNtlVlm) ? '$' + formatBigNumber(ctx.dayNtlVlm) : '—';
+  const oiWrap = document.getElementById('statOIWrap');
+  const fundWrap = document.getElementById('statFundingWrap');
+  if(!ctx || ctx.isSpot){
+    // 스팟은 펀딩/OI 개념이 없음
+    oiWrap.style.display = 'none';
+    fundWrap.style.display = 'none';
+    return;
+  }
+  oiWrap.style.display = '';
+  fundWrap.style.display = '';
+  const oiUsd = (Number.isFinite(ctx.openInterest) && Number.isFinite(ctx.markPx)) ? ctx.openInterest * ctx.markPx : NaN;
+  document.getElementById('statOI').textContent = Number.isFinite(oiUsd) ? '$' + formatBigNumber(oiUsd) : '—';
+  const fundEl = document.getElementById('statFunding');
+  if(Number.isFinite(ctx.funding)){
+    const pct = ctx.funding * 100;
+    fundEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(4) + '%';
+    fundEl.style.color = pct >= 0 ? 'var(--up)' : 'var(--down)';
+  }else{
+    fundEl.textContent = '—';
+    fundEl.style.color = '';
+  }
+}
+
+function connectAssetCtxWs(coin, isSpot){
+  if(state.assetCtxWs){
+    try{ state.assetCtxWs.close(); }catch(e){}
+    state.assetCtxWs = null;
+  }
+  state.assetCtx = null;
+  renderAssetCtx();
+  const ws = new WebSocket('wss://api.hyperliquid.xyz/ws');
+  state.assetCtxWs = ws;
+  ws.onopen = () => {
+    if(state.assetCtxWs !== ws) return;
+    ws.send(JSON.stringify({ method: 'subscribe', subscription: { type: 'activeAssetCtx', coin } }));
+  };
+  ws.onmessage = (ev) => {
+    if(state.assetCtxWs !== ws) return;
+    let msg;
+    try{ msg = JSON.parse(ev.data); }catch(e){ return; }
+    if((msg.channel !== 'activeAssetCtx' && msg.channel !== 'activeSpotAssetCtx') || !msg.data || !msg.data.ctx) return;
+    const ctx = msg.data.ctx;
+    state.assetCtx = {
+      isSpot: msg.channel === 'activeSpotAssetCtx',
+      funding: ctx.funding != null ? parseFloat(ctx.funding) : null,
+      openInterest: ctx.openInterest != null ? parseFloat(ctx.openInterest) : null,
+      dayNtlVlm: ctx.dayNtlVlm != null ? parseFloat(ctx.dayNtlVlm) : null,
+      markPx: ctx.markPx != null ? parseFloat(ctx.markPx) : null,
+    };
+    renderAssetCtx();
+  };
+  ws.onclose = () => {
+    if(state.assetCtxWs === ws){
+      setTimeout(() => { if(state.assetCtxWs === ws) connectAssetCtxWs(coin, isSpot); }, 3000);
+    }
+  };
+  ws.onerror = () => {};
+}
+
+// 펀딩 정산은 매시 정각(UTC) — 특정 페어와 무관하게 항상 돌아가는 카운트다운
+function updateFundingCountdown(){
+  const el = document.getElementById('fundingCountdown');
+  if(!el) return;
+  const now = new Date();
+  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours() + 1, 0, 0, 0));
+  const diffMs = Math.max(0, next - now);
+  const mm = Math.floor(diffMs / 60000);
+  const ss = Math.floor((diffMs % 60000) / 1000);
+  el.textContent = String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
+}
+setInterval(updateFundingCountdown, 1000);
+updateFundingCountdown();
+
+// ---------- 상단 바 "오늘" 통계 전용 (선택된 인터벌과 무관하게 항상 1d 기준) ----------
+async function fetchTodayCandle(coin){
+  try{
+    const history = await fetchHistory(coin, '1d');
+    if(!Array.isArray(history) || !history.length) return null;
+    return toChartCandle(history[history.length - 1]);
+  }catch(err){
+    console.warn('[HL Chart] 오늘 통계(1d) 로드 실패', err);
+    return null;
+  }
+}
+
+function connectTodayWs(coin){
+  if(state.todayWs){
+    try{ state.todayWs.close(); }catch(e){}
+    state.todayWs = null;
+  }
+  const ws = new WebSocket('wss://api.hyperliquid.xyz/ws');
+  state.todayWs = ws;
+  ws.onopen = () => {
+    if(state.todayWs !== ws) return;
+    ws.send(JSON.stringify({ method: 'subscribe', subscription: { type: 'candle', coin, interval: '1d' } }));
+  };
+  ws.onmessage = (ev) => {
+    if(state.todayWs !== ws) return;
+    let msg;
+    try{ msg = JSON.parse(ev.data); }catch(e){ return; }
+    if(msg.channel !== 'candle' || !msg.data) return;
+    state.todayCandle = toChartCandle(msg.data);
+    renderTodayIfNotHovering();
+  };
+  ws.onclose = () => {
+    if(state.todayWs === ws){
+      setTimeout(() => { if(state.todayWs === ws) connectTodayWs(coin); }, 3000);
+    }
+  };
+  ws.onerror = () => {};
+}
+
+// ---------- WebSocket 실시간 구독 (native candle / agg 기반 candle / tick 기반) ----------
+function connectWsGeneric(coin, interval){
+  if(state.ws){
+    try{ state.ws.close(); }catch(e){}
+    state.ws = null;
+  }
+  setStatus(t('statusConnecting'));
+  const meta = INTERVAL_META[interval];
+  const ws = new WebSocket('wss://api.hyperliquid.xyz/ws');
+  state.ws = ws;
+
+  ws.onopen = () => {
+    if(meta.kind === 'tick'){
+      ws.send(JSON.stringify({ method: 'subscribe', subscription: { type: 'trades', coin } }));
+    }else{
+      const wsInterval = meta.kind === 'agg' ? meta.base : interval;
+      ws.send(JSON.stringify({ method: 'subscribe', subscription: { type: 'candle', coin, interval: wsInterval } }));
+    }
+    setStatus(t('statusLive', state.currentBars.length), 'live');
+  };
+
+  ws.onmessage = (ev) => {
+    if(state.ws !== ws) return; // 이미 다른 페어/인터벌로 전환되어 이 연결은 더 이상 유효하지 않음 (지연 도착 메시지 무시)
+    let msg;
+    try{ msg = JSON.parse(ev.data); }catch(e){ return; }
+    if(meta.kind === 'tick'){
+      if(msg.channel !== 'trades' || !Array.isArray(msg.data)) return;
+      msg.data.forEach(t => ingestTick(t, meta.ms));
+    }else{
+      if(msg.channel !== 'candle' || !msg.data) return;
+      const c = toChartCandle(msg.data);
+      if(meta.kind === 'agg'){
+        ingestAggCandle(c, meta.ms);
+      }else{
+        const safeC = normalizeLiveBar(c);
+        updateSeriesWithCandle(safeC);
+        state.volumeSeries.update(volPoint(safeC));
+        state.lastCandle = safeC;
+        pushOrUpdateBar(safeC);
+        updatePriceBar(safeC, state.prevDayClose);
+      }
+    }
+  };
+
+  ws.onerror = () => {
+    setStatus(t('statusConnError'), 'err');
+    showNetBanner(t('bannerWsBlocked'));
+  };
+  ws.onclose = () => {
+    if(state.ws === ws){
+      setStatus(t('statusReconnecting'), 'err');
+      setTimeout(() => { if(state.ws === ws) connectWsGeneric(coin, interval); }, 3000);
+    }
+  };
+}
+
+// ---------- 실시간 gap filler ----------
+// tick/agg 모드에서 한동안 체결(또는 1m 봉)이 안 들어오면 화면이 멈춰 보이므로,
+// 주기적으로 현재 버킷이 넘어갔는지 확인해서 직전 종가로 이어지는 flat 봉을 채워준다.
+function startGapFiller(ms){
+  stopGapFiller();
+  state.gapTimer = setInterval(() => {
+    if(!state.liveAgg) return;
+    const bucketSec = Math.floor(Date.now() / ms) * (ms / 1000);
+    if(bucketSec > state.liveAgg.time){
+      const flat = { time: bucketSec, open: state.liveAgg.close, high: state.liveAgg.close, low: state.liveAgg.close, close: state.liveAgg.close, volume: 0 };
+      state.liveAgg = flat;
+      state.candleSeries.update(flat);
+      state.volumeSeries.update(volPoint(flat));
+      state.lastCandle = flat;
+      pushOrUpdateBar(flat);
+      updatePriceBar(flat, state.prevDayClose);
+    }
+  }, Math.min(ms, 1000));
+}
+function stopGapFiller(){
+  if(state.gapTimer){ clearInterval(state.gapTimer); state.gapTimer = null; }
+}
+
+// ---------- EMA Band 지표 (Pine: EMA Band with Average Line) ----------
+// EMA(20~240, 10 간격, 총 23개) 중 최댓값/최솟값을 밴드로, 그 중앙값과 23개 평균을 라인으로 표시.
+// lightweight-charts는 두 라인 사이를 채우는 기능이 없어서 4개의 라인(상단/하단/평균/평균2)만 그린다.
+const EMA_BAND_LENGTHS = [20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200,210,220,230,240];
+function emaAlpha(len){ return 2 / (len + 1); }
+
+// 전체 봉을 처음부터 다시 계산한다. anchor는 "마지막 봉 직전까지의 EMA 상태"로,
+// 실시간 갱신 시 형성 중인 마지막 봉만 다시 계산하기 위한 기준점으로 쓰인다.
+function computeEmaBandFull(bars){
+  const current = {};
+  let anchorBeforeLast = {};
+  const points = [];
+  bars.forEach((b) => {
+    anchorBeforeLast = { ...current };
+    EMA_BAND_LENGTHS.forEach(len => {
+      const a = emaAlpha(len);
+      current[len] = (current[len] == null) ? b.close : a * b.close + (1 - a) * current[len];
+    });
+    const vals = EMA_BAND_LENGTHS.map(len => current[len]);
+    const max = Math.max(...vals);
+    const min = Math.min(...vals);
+    points.push({
+      time: b.time,
+      max, min,
+      avg: (max + min) / 2,
+      avg2: vals.reduce((s, v) => s + v, 0) / vals.length,
+    });
+  });
+  return {
+    points,
+    anchor: anchorBeforeLast,
+    current: { ...current },
+    lastTime: bars.length ? bars[bars.length - 1].time : null,
+  };
+}
+
+function createEmaBandSeries(){
+  if(!state.chart || state.emaSeries) return;
+  const lineOpt = (color) => ({
+    color, lineWidth: 2, priceScaleId: 'right',
+    lastValueVisible: true,   // 가격축(오른쪽)에 현재 값 라벨 표시
+    priceLineVisible: false,  // 차트 전체를 가로지르는 점선은 4개나 겹치면 지저분해서 끔
+    crosshairMarkerVisible: false,
+  });
+  state.emaSeries = {
+    max: state.chart.addLineSeries(lineOpt('#00BFFF')),
+    min: state.chart.addLineSeries(lineOpt('#FF4500')),
+    avg: state.chart.addLineSeries(lineOpt('#26a641')),
+    avg2: state.chart.addLineSeries(lineOpt('#32CD32')),
+  };
+}
+function removeEmaBandSeries(){
+  if(!state.chart || !state.emaSeries) return;
+  Object.values(state.emaSeries).forEach(s => state.chart.removeSeries(s));
+  state.emaSeries = null;
+  state.emaCalc = null;
+}
+
+// 페어/인터벌 전환, 과거 데이터 추가 로딩 등 state.currentBars 전체가 바뀔 때 호출
+function refreshEmaBandFull(){
+  if(!state.emaBandOn) return;
+  if(!state.emaSeries) createEmaBandSeries();
+  const bars = state.currentBars;
+  if(!bars.length){
+    Object.values(state.emaSeries).forEach(s => s.setData([]));
+    state.emaCalc = null;
+    return;
+  }
+  const result = computeEmaBandFull(bars);
+  state.emaSeries.max.setData(result.points.map(p => ({ time: p.time, value: p.max })));
+  state.emaSeries.min.setData(result.points.map(p => ({ time: p.time, value: p.min })));
+  state.emaSeries.avg.setData(result.points.map(p => ({ time: p.time, value: p.avg })));
+  state.emaSeries.avg2.setData(result.points.map(p => ({ time: p.time, value: p.avg2 })));
+  state.emaCalc = { anchor: result.anchor, current: result.current, lastTime: result.lastTime };
+}
+
+// 실시간 봉 하나가 들어올 때마다 전체 재계산 없이 anchor 기준으로 마지막 봉만 다시 계산
+function updateEmaBandLive(bar){
+  if(!state.emaBandOn || !state.emaSeries) return;
+  if(!state.emaCalc){
+    refreshEmaBandFull();
+    return;
+  }
+  const calc = state.emaCalc;
+  if(calc.lastTime == null || bar.time > calc.lastTime){
+    calc.anchor = { ...calc.current };
+    calc.lastTime = bar.time;
+  }
+  const current = {};
+  EMA_BAND_LENGTHS.forEach(len => {
+    const a = emaAlpha(len);
+    const anchor = calc.anchor[len];
+    current[len] = (anchor == null) ? bar.close : a * bar.close + (1 - a) * anchor;
+  });
+  calc.current = current;
+  const vals = EMA_BAND_LENGTHS.map(len => current[len]);
+  const max = Math.max(...vals);
+  const min = Math.min(...vals);
+  const avg = (max + min) / 2;
+  const avg2 = vals.reduce((s, v) => s + v, 0) / vals.length;
+  state.emaSeries.max.update({ time: bar.time, value: max });
+  state.emaSeries.min.update({ time: bar.time, value: min });
+  state.emaSeries.avg.update({ time: bar.time, value: avg });
+  state.emaSeries.avg2.update({ time: bar.time, value: avg2 });
+}
+
+const emaBandToggle = document.getElementById('emaBandToggle');
+const emaBandStateLabel = document.getElementById('emaBandStateLabel');
+emaBandToggle.onclick = () => {
+  state.emaBandOn = !state.emaBandOn;
+  emaBandToggle.classList.toggle('on', state.emaBandOn);
+  emaBandStateLabel.textContent = state.emaBandOn ? 'ON' : 'OFF';
+  if(state.emaBandOn){
+    refreshEmaBandFull();
+  }else{
+    removeEmaBandSeries();
+  }
+};
+
+// ---------- 뒤로 스크롤하면 과거 데이터를 이어서 불러오기 ----------
+// tick(초단위) 인터벌은 recentTrades가 "최근 N건"만 주기 때문에 더 불러올 방법이 없음
+async function loadMoreHistory(){
+  if(state.loadingMore || state.noMoreHistory || !state.coin || !state.currentBars.length) return;
+  const meta = INTERVAL_META[state.interval];
+  if(meta.kind === 'tick') return;
+
+  state.loadingMore = true;
+  try{
+    const earliestMs = state.currentBars[0].time * 1000;
+    let olderBars;
+    if(meta.kind === 'agg'){
+      const history = await fetchHistory(state.coin, meta.base, earliestMs);
+      olderBars = buildAggCandles(history.map(toChartCandle), meta.ms);
+    }else{
+      const history = await fetchHistory(state.coin, state.interval, earliestMs);
+      olderBars = history.map(toChartCandle);
+    }
+    olderBars = olderBars.filter(b => b.time < state.currentBars[0].time);
+
+    if(olderBars.length === 0){
+      state.noMoreHistory = true;
+      return;
+    }
+
+    const range = state.chart.timeScale().getVisibleLogicalRange();
+    state.currentBars = [...olderBars, ...state.currentBars];
+    state.candleSeries.setData(state.currentBars);
+    state.volumeSeries.setData(state.currentBars.map(volPoint));
+    refreshEmaBandFull();
+    if(range){
+      state.chart.timeScale().setVisibleLogicalRange({
+        from: range.from + olderBars.length,
+        to: range.to + olderBars.length,
+      });
+    }
+  }catch(e){
+    console.error('loadMoreHistory 실패', e);
+  }finally{
+    state.loadingMore = false;
+  }
+}
+
+// ---------- pair 선택 ----------
+async function selectPair(pair){
+  const coinChanged = state.coin !== pair.coin;
+  state.coin = pair.coin;
+  state.label = pair.label;
+  state.isSpot = pair.type === 'SPOT';
+  state.liveAgg = null;
+  state.currentBars = [];
+  state.loadingMore = false;
+  state.noMoreHistory = false;
+  state.hoverCandle = null;
+  renderFavorites();
+  document.getElementById('coinLabel').textContent = pair.coin + ' (' + pair.type + ')';
+
+  if(coinChanged){
+    state.todayCandle = null;
+    fetchTodayCandle(pair.coin).then(c => {
+      if(state.coin !== pair.coin) return; // 그 사이 다른 페어로 전환됨
+      state.todayCandle = c;
+      renderTodayIfNotHovering();
+    });
+    connectTodayWs(pair.coin);
+    connectAssetCtxWs(pair.coin, pair.type === 'SPOT');
+  }
+
+  if(!state.chart){
+    const ok = await initChart();
+    if(!ok) return;
+  } else {
+    // 기존 차트가 있으면 현재 선택된 유형으로 시리즈 재설정
+    recreateMainSeries();
+  }
+
+  const meta = INTERVAL_META[state.interval];
+  showTickNote(meta);
+  stopGapFiller();
+  setStatus(t('statusLoadingHistory'));
+  try{
+    let bars;
+    if(meta.kind === 'tick'){
+      const trades = await info({ type: 'recentTrades', coin: pair.coin });
+      bars = fillGaps(buildTickCandles(trades, meta.ms), meta.ms / 1000);
+      if(trades.length >= 2){
+        const times = trades.map(tr => tr.time);
+        const spanSec = Math.round((Math.max(...times) - Math.min(...times)) / 1000);
+        const spanText = spanSec >= 60 ? t('aboutMin', Math.round(spanSec / 60)) : t('aboutSec', spanSec);
+        document.getElementById('tickNoteText').textContent = t('tickSpanNote', trades.length, spanText);
+      }
+    }else if(meta.kind === 'agg'){
+      const history = await fetchHistory(pair.coin, meta.base);
+      bars = fillGaps(buildAggCandles(history.map(toChartCandle), meta.ms), meta.ms / 1000);
+    }else{
+      const history = await fetchHistory(pair.coin, state.interval);
+      bars = history.map(toChartCandle);
+    }
+
+    // 방어적 처리: 시간 오름차순 정렬 + 중복 타임스탬프 제거(마지막 값 유지)
+    // lightweight-charts는 시간이 항상 오름차순/고유해야 하는데, REST 스냅샷도 예외가 아닐 수 있다.
+    bars.sort((a, b) => a.time - b.time);
+    const deduped = [];
+    for(const b of bars){
+      if(deduped.length && deduped[deduped.length - 1].time === b.time) deduped[deduped.length - 1] = b;
+      else deduped.push(b);
+    }
+    bars = deduped;
+
+    // 디버그: 값이 이상한(NaN, 0 이하, high<low 등) 캔들이 섞여 있으면 걸러내고 개수를 남긴다
+    const rawLen = bars.length;
+    bars = bars.filter(b =>
+      Number.isFinite(b.open) && Number.isFinite(b.high) &&
+      Number.isFinite(b.low) && Number.isFinite(b.close) &&
+      b.open > 0 && b.high > 0 && b.low > 0 && b.close > 0 &&
+      b.high >= b.low
+    );
+    if(bars.length !== rawLen){
+      console.warn(`[HL Chart] 이상 캔들 ${rawLen - bars.length}개 제거됨 (원래 ${rawLen}개 -> ${bars.length}개)`);
+    }
+    console.log(`[HL Chart] ${state.coin} ${state.interval} 캔들 ${bars.length}개 로드됨`, bars.slice(0, 2), bars.slice(-2));
+
+    state.currentBars = bars;
+    recreateMainSeries();
+    refreshEmaBandFull();
+    state.noMoreHistory = meta.kind === 'tick'; // recentTrades는 시간 범위 조회가 없어 페이지네이션 불가
+    if(bars.length){
+      state.lastCandle = bars[bars.length - 1];
+      state.liveAgg = meta.kind !== 'native' ? { ...state.lastCandle } : null;
+      state.prevDayClose = bars.length > 1 ? bars[0].open : null;
+      updatePriceBar(state.lastCandle, state.prevDayClose);
+      renderTodayIfNotHovering();
+      
+      // 가격축(Y축) 수동 조정 상태 초기화: 새 페어로 넘어갈 때 다시 오토스케일로 맞춤
+      state.chart.priceScale('right').applyOptions({ autoScale: true });
+      state.chart.priceScale('left').applyOptions({ autoScale: true });
+      state.chart.timeScale().fitContent();
+    }
+
+    connectWsGeneric(pair.coin, state.interval);
+    if(meta.kind !== 'native') startGapFiller(meta.ms);
+  }catch(err){
+    console.error(err);
+    setStatus(t('statusError', err.message), 'err');
+    if(err instanceof TypeError && /fetch/i.test(err.message)){
+      showNetBanner(t('bannerApiBlocked'));
+    }
+  }
+}
+
+function selectInterval(iv){
+  state.interval = iv;
+  intervalToggleLabel.textContent = iv;
+  renderIntervalFavorites();
+  if(state.coin) selectPair({ coin: state.coin, label: state.label, type: state.isSpot ? 'SPOT' : 'PERP' });
+}
+
+// ---------- 차트 유형 선택 ----------
+const CHART_TYPES = [
+  { id: 'Candlestick', i18nKey: 'chartCandlestick' },
+  { id: 'Hollow', i18nKey: 'chartHollow' },
+  { id: 'Bar', i18nKey: 'chartBar' },
+  { id: 'Line', i18nKey: 'chartLine' },
+  { id: 'Area', i18nKey: 'chartArea' },
+  { id: 'HeikinAshi', i18nKey: 'chartHeikinAshi' },
+];
+
+const chartTypeToggle = document.getElementById('chartTypeToggle');
+const chartTypeLabel = document.getElementById('chartTypeLabel');
+const chartTypeDropdown = document.getElementById('chartTypeDropdown');
+const chartTypeList = document.getElementById('chartTypeList');
+
+function renderChartTypeList() {
+  chartTypeList.innerHTML = '';
+  CHART_TYPES.forEach(ct => {
+    chartTypeList.appendChild(makeDropdownRow({
+      active: ct.id === state.chartType,
+      label: t(ct.i18nKey),
+      onClick: () => { selectChartType(ct.id); closeChartTypeDropdown(); },
+    }));
+  });
+}
+const chartTypeDropdownCtrl = createDropdown(chartTypeToggle, chartTypeDropdown, renderChartTypeList);
+function closeChartTypeDropdown(){ chartTypeDropdownCtrl.close(); }
+
+
+function selectChartType(type) {
+  state.chartType = type;
+  const ct = CHART_TYPES.find(x => x.id === type);
+  chartTypeLabel.textContent = ct ? t(ct.i18nKey) : t('chartCandlestick');
+  
+  if (state.chart && state.currentBars.length) {
+    recreateMainSeries();
+  }
+}
+
+function calculateHeikinAshi(bars) {
+  const haBars = [];
+  let prevHA = null;
+  bars.forEach(b => {
+    const close = (b.open + b.high + b.low + b.close) / 4;
+    const open = prevHA ? (prevHA.open + prevHA.close) / 2 : (b.open + b.close) / 2;
+    const high = Math.max(b.high, open, close);
+    const low = Math.min(b.low, open, close);
+    const haBar = { time: b.time, open, high, low, close, volume: b.volume };
+    haBars.push(haBar);
+    prevHA = haBar;
+  });
+  return haBars;
+}
+
+function recreateMainSeries() {
+  if (!state.chart) return;
+
+  // 버그 수정: right 가격축을 쓰는 시리즈가 이것 하나뿐이라, removeSeries()로 제거하는 순간
+  // lightweight-charts가 해당 가격축을 기본값으로 리셋해버림 (autoScale, scaleMargins 등).
+  // 그 결과 사용자가 드래그로 꺼둔 수동 스케일/이동 위치가 캔들 종류 변경 시마다 초기화됨.
+  // -> 제거 전에 현재 가격축/타임축 상태를 저장했다가, 새 시리즈 생성 후 그대로 복원한다.
+  const prevRightOpts = state.chart.priceScale('right').options();
+  const prevLeftOpts = state.chart.priceScale('left').options();
+  const prevLogicalRange = state.chart.timeScale().getVisibleLogicalRange();
+
+  // 기존 시리즈 제거
+  if (state.candleSeries) {
+    state.chart.removeSeries(state.candleSeries);
+    state.candleSeries = null;
+  }
+  
+  const type = state.chartType;
+  const commonOptions = {
+    priceScaleId: 'right',
+    priceFormat: {
+      type: 'custom',
+      formatter: (price) => formatPrice(price),
+    },
+  };
+
+  if (type === 'Candlestick' || type === 'Hollow' || type === 'HeikinAshi') {
+    const isHollow = type === 'Hollow';
+    state.candleSeries = state.chart.addCandlestickSeries({
+      ...commonOptions,
+      upColor: isHollow ? 'transparent' : '#4fd1c5',
+      downColor: '#ef6f6f',
+      borderVisible: true,
+      wickVisible: true,
+      wickUpColor: '#4fd1c5',
+      wickDownColor: '#ef6f6f',
+      borderUpColor: '#4fd1c5',
+      borderDownColor: '#ef6f6f',
+    });
+  } else if (type === 'Bar') {
+    state.candleSeries = state.chart.addBarSeries({
+      ...commonOptions,
+      upColor: '#4fd1c5',
+      downColor: '#ef6f6f',
+    });
+  } else if (type === 'Line') {
+    state.candleSeries = state.chart.addLineSeries({
+      ...commonOptions,
+      color: '#4fd1c5',
+      lineWidth: 2,
+    });
+  } else if (type === 'Area') {
+    state.candleSeries = state.chart.addAreaSeries({
+      ...commonOptions,
+      topColor: 'rgba(79, 209, 197, 0.4)',
+      bottomColor: 'rgba(79, 209, 197, 0.0)',
+      lineColor: '#4fd1c5',
+      lineWidth: 2,
+    });
+  }
+
+  // 데이터 재설정
+  let displayBars = state.currentBars;
+  if (type === 'HeikinAshi') {
+    displayBars = calculateHeikinAshi(state.currentBars);
+  }
+  
+  if (type === 'Line' || type === 'Area') {
+    state.candleSeries.setData(displayBars.map(b => ({ time: b.time, value: b.close })));
+  } else {
+    state.candleSeries.setData(displayBars);
+  }
+  
+  // 볼륨 시리즈 색상 동기화를 위해 볼륨도 다시 그림 (옵션)
+  state.volumeSeries.setData(state.currentBars.map(volPoint));
+
+  // 저장해둔 가격축(autoScale, scaleMargins)과 타임축 스크롤 위치를 복원해서
+  // 캔들 종류를 바꿔도 사용자가 조절해둔 뷰가 유지되게 한다.
+  [['right', prevRightOpts], ['left', prevLeftOpts]].forEach(([scaleId, prev]) => {
+    state.chart.priceScale(scaleId).applyOptions({
+      autoScale: prev.autoScale,
+      scaleMargins: prev.scaleMargins,
+    });
+  });
+  if (prevLogicalRange) {
+    state.chart.timeScale().setVisibleLogicalRange(prevLogicalRange);
+  }
+}
+
+// ---------- 언어 전환 버튼 ----------
+const langBtnEn = document.getElementById('langBtnEn');
+const langBtnKr = document.getElementById('langBtnKr');
+langBtnEn.addEventListener('click', () => setLanguage('en'));
+langBtnKr.addEventListener('click', () => setLanguage('kr'));
+
+// ---------- 시작 ----------
+async function boot(){
+  applyLanguage();
+  renderIntervalFavorites();
+  setStatus(t('statusLoadingPairs'));
+  try{
+    state.allPairs = await loadAllPairs();
+    state.allPairsLoaded = true;
+  }catch(err){
+    console.error(err);
+    showNetBanner(t('bannerPairsFailed'));
+    setStatus(t('statusPairLoadFailed'), 'err');
+    return;
+  }
+
+  DEFAULT_FAVORITE_CANDIDATES.forEach(f => {
+    const match = findByCandidates(f.candidates);
+    if(match) state.favorites.push(match);
+  });
+  renderFavorites();
+  syncFavoritePriceSubscriptions();
+  renderDropdownList('');
+
+  if(state.favorites.length){
+    selectPair(state.favorites[0]);
+  }else{
+    setStatus(t('statusNoDefaultFav'), 'err');
+  }
+}
+
+boot();
+</script>
+</body>
+</html>

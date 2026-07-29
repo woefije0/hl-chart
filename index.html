@@ -103,7 +103,6 @@
   .allpairs-toggle svg{ width:10px; height:10px; transition:transform .15s; }
   .allpairs-toggle.open svg{ transform:rotate(180deg); }
   .allpairs-toggle.on{ color: var(--accent); }
-  .allpairs-toggle.on #emaBandStateLabel{ color: var(--accent); opacity:1 !important; }
 
   .interval-select{ position:relative; }
 
@@ -235,6 +234,9 @@
   .rtype.PERP{ background: rgba(79,209,197,0.12); color: var(--accent); }
   .rtype.SPOT{ background: rgba(232,169,79,0.12); color: var(--amber); }
   .rtype.HIP3{ background: rgba(160,130,255,0.14); color: #a082ff; }
+  .rtype.ON{ background: rgba(79,209,197,0.16); color: var(--accent); }
+  .rtype.OFF{ background: rgba(255,255,255,0.06); color: var(--text-dim); }
+  .dropdown-indicators{ width: 200px; }
 
   .pricebar{
     display:flex; align-items:center; gap:22px;
@@ -255,6 +257,88 @@
   .chart-wrap{ position:relative; flex:1; min-height:0; }
   #chart{ position:absolute; inset:0; }
   #volCandleOverlay{ position:absolute; inset:0; pointer-events:none; z-index:5; display:none; }
+
+  .rsi-pane{
+    position:relative; flex-shrink:0; height:160px;
+    border-top:1px solid var(--line);
+    background: var(--bg);
+  }
+  #rsiChart{ position:absolute; inset:0; }
+  .rsi-resize-handle{
+    position:absolute; top:-4px; left:0; right:0; height:8px;
+    cursor:ns-resize; z-index:15;
+  }
+  .rsi-resize-handle:hover, .rsi-resize-handle.dragging{ background: rgba(79,209,197,0.25); }
+
+  /* ---------- 차트 좌상단 지표 범례 (TradingView 스타일) ---------- */
+  .chart-legend{
+    position:absolute; top:10px; left:56px; z-index:20;
+    font-family:'JetBrains Mono', monospace; font-size:11.5px;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .legend-item{
+    position:relative;
+    display:flex; align-items:center; gap:7px;
+    background: rgba(16,20,27,0.55);
+    padding:4px 7px; border-radius:6px;
+    cursor:default; transition:.12s;
+  }
+  .legend-item:hover{ background: rgba(21,26,34,0.9); }
+  .legend-name{ color:var(--text); font-weight:600; white-space:nowrap; }
+  .legend-item.hidden .legend-name{ opacity:.4; text-decoration:line-through; }
+  .legend-icons{ display:flex; align-items:center; gap:2px; opacity:0; transition:.12s; }
+  .legend-item:hover .legend-icons{ opacity:1; }
+  .legend-icon{
+    background:none; border:none; padding:3px; margin:0; cursor:pointer;
+    color:var(--text-dim); display:flex; align-items:center; justify-content:center;
+    border-radius:4px;
+  }
+  .legend-icon:hover{ color:var(--text); background:rgba(255,255,255,0.08); }
+  .legend-icon svg{ width:12.5px; height:12.5px; }
+  .legend-icon.active{ color:var(--accent); }
+
+  .legend-settings-backdrop{
+    position:fixed; inset:0; background:rgba(0,0,0,0.5);
+    z-index:999; display:none;
+  }
+  .legend-settings-backdrop.open{ display:block; }
+  .legend-settings{
+    position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+    width:210px; background:var(--panel); border:1px solid var(--line);
+    border-radius:8px; box-shadow:0 12px 32px rgba(0,0,0,0.45);
+    padding:10px; display:none; flex-direction:column; gap:2px;
+    cursor:default; z-index:1000;
+    max-height:80vh; overflow-y:auto;
+  }
+  .legend-settings.open{ display:flex; }
+  .legend-settings-title{
+    font-size:10.5px; font-weight:700; color:var(--text-dim);
+    letter-spacing:.4px; padding:2px 2px 6px;
+  }
+  .legend-settings-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:5px 2px; border-radius:5px;
+  }
+  .legend-settings-row:hover{ background:var(--panel-2); }
+  .legend-settings-row label{
+    display:flex; align-items:center; gap:7px; cursor:pointer;
+    color:var(--text); font-size:11.5px; user-select:none;
+  }
+  .legend-settings-row input[type="checkbox"]{ accent-color: var(--accent); cursor:pointer; }
+  .legend-color-dot{
+    width:18px; height:18px; border-radius:4px; border:1px solid var(--line);
+    padding:0; cursor:pointer; background:none; overflow:hidden;
+  }
+  .legend-color-dot::-webkit-color-swatch-wrapper{ padding:0; }
+  .legend-color-dot::-webkit-color-swatch{ border:none; border-radius:3px; }
+  .legend-settings-row.field{ flex-direction:column; align-items:flex-start; gap:4px; }
+  .legend-settings-row .field-label{ font-size:10.5px; color:var(--text-dim); }
+  .legend-select, .legend-number{
+    width:100%; background:var(--panel-2); border:1px solid var(--line); border-radius:5px;
+    padding:5px 7px; color:var(--text); font-family:'JetBrains Mono', monospace; font-size:11.5px; outline:none;
+  }
+  .legend-select:focus, .legend-number:focus{ border-color: var(--accent-dim); }
+  .legend-settings-divider{ height:1px; background:var(--line); margin:6px 0; }
 
   .footer{
     padding:6px 18px; border-top:1px solid var(--line); background:var(--panel);
@@ -367,10 +451,14 @@
     </div>
   </div>
 
-  <div class="pairs" id="emaBandRow">
-    <button class="allpairs-toggle" id="emaBandToggle" data-i18n-title="emaToggleTitle">
-      <span data-i18n="emaBandLabel">EMA Band</span> <span id="emaBandStateLabel" style="opacity:.6">OFF</span>
+  <div class="pairs interval-select" id="indicatorsRow">
+    <button class="allpairs-toggle" id="indicatorsToggle" data-i18n-title="indicatorsToggleTitle">
+      <span data-i18n="indicatorsLabel">Indicators</span>
+      <svg viewBox="0 0 10 10" fill="none"><path d="M1 3L5 7L9 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
     </button>
+    <div class="dropdown dropdown-indicators" id="indicatorsDropdown">
+      <div class="dropdown-list" id="indicatorsList"></div>
+    </div>
   </div>
 
   <div class="spacer"></div>
@@ -390,7 +478,6 @@
     <span data-i18n="tradeBtn">Trade on Hyperliquid</span>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
   </a>
-  <div class="status"><span class="dot" id="statusDot"></span><span id="statusText" data-i18n="statusWaiting">Waiting to connect</span></div>
 </div>
 
 <div class="main-grid layout-1" id="mainGrid">
@@ -407,15 +494,194 @@
       <div class="stat" id="statOIWrap">OI <b id="statOI">—</b></div>
       <div class="stat" id="statFundingWrap"><span data-i18n="statFunding">Funding (1h)</span> <b id="statFunding">—</b> <span style="opacity:.6"><span data-i18n="statUntilSettle">· until settle</span> <b id="fundingCountdown">--:--</b></span></div>
       <div class="stat"><span data-i18n="statSymbol">Symbol</span> <b id="coinLabel">—</b></div>
-      <div class="stat note" id="tickNoteWrap" style="display:none">⚠ <b id="tickNoteText"></b></div>
+      <div class="stat status" id="statusWrap" style="margin-left:auto"><span class="dot" id="statusDot"></span><span id="statusText">Waiting to connect</span></div>
     </div>
 
     <div class="chart-wrap">
       <div id="chart"></div>
       <canvas id="volCandleOverlay"></canvas>
+      <div class="chart-legend" id="chartLegend">
+        <div class="legend-item" id="legendEmaBand" style="display:none">
+          <span class="legend-name" data-i18n="emaBandLabel">EMA Band</span>
+          <span class="legend-icons">
+            <button class="legend-icon" id="legendEyeBtn" data-i18n-title="legendToggleVisible" title="Toggle visibility">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="legend-icon" id="legendGearBtn" data-i18n-title="legendSettings" title="Settings">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+            <button class="legend-icon" id="legendTrashBtn" data-i18n-title="legendRemove" title="Remove">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+            </button>
+          </span>
+          <div class="legend-settings" id="legendSettings">
+            <div class="legend-settings-title" data-i18n="legendSettingsTitle">EMA BAND</div>
+            <div class="legend-settings-row">
+              <label><input type="checkbox" id="emaShowMax" checked><span data-i18n="emaUpperBand">Upper Band (Max EMA)</span></label>
+              <input type="color" class="legend-color-dot" id="emaColorMax" value="#00BFFF">
+            </div>
+            <div class="legend-settings-row">
+              <label><input type="checkbox" id="emaShowMin" checked><span data-i18n="emaLowerBand">Lower Band (Min EMA)</span></label>
+              <input type="color" class="legend-color-dot" id="emaColorMin" value="#FF4500">
+            </div>
+            <div class="legend-settings-row">
+              <label><input type="checkbox" id="emaShowAvg" checked><span data-i18n="emaAverageLine">Average EMA</span></label>
+              <input type="color" class="legend-color-dot" id="emaColorAvg" value="#26a641">
+            </div>
+            <div class="legend-settings-row">
+              <label><input type="checkbox" id="emaShowAvg2" checked><span data-i18n="emaAverage2Line">Average2 EMA</span></label>
+              <input type="color" class="legend-color-dot" id="emaColorAvg2" value="#32CD32">
+            </div>
+          </div>
+        </div>
+        <div class="legend-item" id="legendBB" style="display:none">
+          <span class="legend-name" data-i18n="bbLabel">Bollinger Bands</span>
+          <span class="legend-icons">
+            <button class="legend-icon" id="legendBBEyeBtn" data-i18n-title="legendToggleVisible" title="Toggle visibility">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="legend-icon" id="legendBBGearBtn" data-i18n-title="legendSettings" title="Settings">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+            <button class="legend-icon" id="legendBBTrashBtn" data-i18n-title="legendRemove" title="Remove">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+            </button>
+          </span>
+          <div class="legend-settings" id="legendBBSettings" style="width:230px">
+            <div class="legend-settings-title" data-i18n="bbSettingsTitle">BOLLINGER BANDS</div>
+            <div class="legend-settings-row field">
+              <span class="field-label" data-i18n="bbLength">Length</span>
+              <input type="number" class="legend-number" id="bbLength" min="1" step="1" value="20">
+            </div>
+            <div class="legend-settings-row field">
+              <span class="field-label" data-i18n="bbMaType">Basis MA Type</span>
+              <select class="legend-select" id="bbMaType">
+                <option value="SMA">SMA</option>
+                <option value="EMA">EMA</option>
+                <option value="SMMA (RMA)">SMMA (RMA)</option>
+                <option value="WMA">WMA</option>
+                <option value="VWMA">VWMA</option>
+              </select>
+            </div>
+            <div class="legend-settings-row field">
+              <span class="field-label" data-i18n="bbSource">Source</span>
+              <select class="legend-select" id="bbSource">
+                <option value="close">close</option>
+                <option value="open">open</option>
+                <option value="high">high</option>
+                <option value="low">low</option>
+                <option value="hl2">hl2</option>
+                <option value="hlc3">hlc3</option>
+                <option value="ohlc4">ohlc4</option>
+              </select>
+            </div>
+            <div class="legend-settings-row field">
+              <span class="field-label" data-i18n="bbStdDev">StdDev</span>
+              <input type="number" class="legend-number" id="bbMult" min="0.001" max="50" step="0.1" value="2">
+            </div>
+            <div class="legend-settings-divider"></div>
+            <div class="legend-settings-row">
+              <label><input type="checkbox" id="bbShowBasis" checked><span data-i18n="bbBasisLine">Basis</span></label>
+              <input type="color" class="legend-color-dot" id="bbColorBasis" value="#2962FF">
+            </div>
+            <div class="legend-settings-row">
+              <label><input type="checkbox" id="bbShowUpper" checked><span data-i18n="bbUpperLine">Upper</span></label>
+              <input type="color" class="legend-color-dot" id="bbColorUpper" value="#F23645">
+            </div>
+            <div class="legend-settings-row">
+              <label><input type="checkbox" id="bbShowLower" checked><span data-i18n="bbLowerLine">Lower</span></label>
+              <input type="color" class="legend-color-dot" id="bbColorLower" value="#089981">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="rsi-pane" id="rsiPane" style="display:none">
+      <div class="rsi-resize-handle" id="rsiResizeHandle"></div>
+      <div id="rsiChart"></div>
+      <div class="chart-legend" id="rsiLegendWrap">
+        <div class="legend-item" id="legendRSI">
+          <span class="legend-name" data-i18n="rsiLabel">RSI</span>
+          <span class="legend-icons">
+            <button class="legend-icon" id="legendRSIEyeBtn" data-i18n-title="legendToggleVisible" title="Toggle visibility">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="legend-icon" id="legendRSIGearBtn" data-i18n-title="legendSettings" title="Settings">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+            <button class="legend-icon" id="legendRSITrashBtn" data-i18n-title="legendRemove" title="Remove">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+            </button>
+          </span>
+          <div class="legend-settings" id="legendRSISettings" style="width:230px">
+            <div class="legend-settings-title" data-i18n="rsiSettingsTitle">RSI</div>
+            <div class="legend-settings-row field">
+              <span class="field-label" data-i18n="rsiLength">RSI Length</span>
+              <input type="number" class="legend-number" id="rsiLength" min="1" step="1" value="14">
+            </div>
+            <div class="legend-settings-row field">
+              <span class="field-label" data-i18n="rsiSource">Source</span>
+              <select class="legend-select" id="rsiSource">
+                <option value="close">close</option>
+                <option value="open">open</option>
+                <option value="high">high</option>
+                <option value="low">low</option>
+                <option value="hl2">hl2</option>
+                <option value="hlc3">hlc3</option>
+                <option value="ohlc4">ohlc4</option>
+              </select>
+            </div>
+            <div class="legend-settings-divider"></div>
+            <div class="legend-settings-row">
+              <label><input type="checkbox" id="rsiShowLine" checked><span data-i18n="rsiLine">RSI</span></label>
+              <input type="color" class="legend-color-dot" id="rsiColorLine" value="#7E57C2">
+            </div>
+            <div class="legend-settings-divider"></div>
+            <div class="legend-settings-row field">
+              <span class="field-label" data-i18n="rsiMaType">Smoothing Type</span>
+              <select class="legend-select" id="rsiMaType">
+                <option value="None">None</option>
+                <option value="SMA">SMA</option>
+                <option value="SMA + Bollinger Bands">SMA + Bollinger Bands</option>
+                <option value="EMA">EMA</option>
+                <option value="SMMA (RMA)">SMMA (RMA)</option>
+                <option value="WMA">WMA</option>
+                <option value="VWMA">VWMA</option>
+              </select>
+            </div>
+            <div class="legend-settings-row field">
+              <span class="field-label" data-i18n="rsiMaLength">Smoothing Length</span>
+              <input type="number" class="legend-number" id="rsiMaLength" min="1" step="1" value="14">
+            </div>
+            <div class="legend-settings-row field" id="rsiBBMultRow" style="display:none">
+              <span class="field-label" data-i18n="bbStdDev">StdDev</span>
+              <input type="number" class="legend-number" id="rsiBBMult" min="0.001" max="50" step="0.1" value="2">
+            </div>
+            <div class="legend-settings-row">
+              <label><input type="checkbox" id="rsiShowMa" checked><span data-i18n="rsiMaLine">Smoothing MA</span></label>
+              <input type="color" class="legend-color-dot" id="rsiColorMa" value="#FFEB3B">
+            </div>
+            <div class="legend-settings-divider"></div>
+            <div class="legend-settings-row">
+              <label><input type="checkbox" id="rsiUpperOn" checked><span data-i18n="rsiUpperBand">Upper Band</span></label>
+              <input type="number" class="legend-number" id="rsiUpperValue" min="0" max="100" step="1" value="70" style="width:56px">
+            </div>
+            <div class="legend-settings-row">
+              <label><input type="checkbox" id="rsiMiddleOn" checked><span data-i18n="rsiMiddleBand">Middle Band</span></label>
+              <input type="number" class="legend-number" id="rsiMiddleValue" min="0" max="100" step="1" value="50" style="width:56px">
+            </div>
+            <div class="legend-settings-row">
+              <label><input type="checkbox" id="rsiLowerOn" checked><span data-i18n="rsiLowerBand">Lower Band</span></label>
+              <input type="number" class="legend-number" id="rsiLowerValue" min="0" max="100" step="1" value="30" style="width:56px">
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
+
+<div class="legend-settings-backdrop" id="legendSettingsBackdrop"></div>
 
 <div class="footer">
   <span>data: Hyperliquid public API (wss://api.hyperliquid.xyz/ws)</span>
@@ -449,6 +715,36 @@ const I18N = {
     tabFav: '⭐ Favorites',
     emaToggleTitle: 'Toggle EMA Band indicator',
     emaBandLabel: 'EMA Band',
+    indicatorsLabel: 'Indicators',
+    indicatorsToggleTitle: 'Add / remove indicators',
+    bbLabel: 'Bollinger Bands',
+    bbSettingsTitle: 'BOLLINGER BANDS',
+    bbLength: 'Length',
+    bbMaType: 'Basis MA Type',
+    bbSource: 'Source',
+    bbStdDev: 'StdDev',
+    bbBasisLine: 'Basis',
+    bbUpperLine: 'Upper',
+    bbLowerLine: 'Lower',
+    rsiLabel: 'RSI',
+    rsiSettingsTitle: 'RSI',
+    rsiLength: 'RSI Length',
+    rsiSource: 'Source',
+    rsiLine: 'RSI',
+    rsiMaType: 'Smoothing Type',
+    rsiMaLength: 'Smoothing Length',
+    rsiMaLine: 'Smoothing MA',
+    rsiUpperBand: 'Upper Band',
+    rsiMiddleBand: 'Middle Band',
+    rsiLowerBand: 'Lower Band',
+    legendToggleVisible: 'Toggle visibility',
+    legendSettings: 'Settings',
+    legendRemove: 'Remove',
+    legendSettingsTitle: 'EMA BAND',
+    emaUpperBand: 'Upper Band (Max EMA)',
+    emaLowerBand: 'Lower Band (Min EMA)',
+    emaAverageLine: 'Average EMA',
+    emaAverage2Line: 'Average2 EMA',
     tradeBtn: 'Trade on Hyperliquid',
     statusWaiting: 'Waiting to connect',
     stat24hVol: '24h Volume',
@@ -464,8 +760,6 @@ const I18N = {
     intervalGroupDays: 'Day / Week / Month',
     loadingAllPairs: 'Loading full pair list…',
     noMatchingPairs: 'No matching pairs',
-    tickNoteSynth: 'Sub-minute candles are synthesized from recent trade data — history may be short',
-    tickNoteAgg: (base) => `Candle synthesized from ${base} bars`,
     chartCandlestick: 'Candles',
     chartHollow: 'Hollow Candles',
     chartVolumeCandle1: 'Volume Candle1',
@@ -475,7 +769,7 @@ const I18N = {
     chartArea: 'Area',
     chartHeikinAshi: 'Heikin Ashi',
     statusConnecting: 'Connecting…',
-    statusLive: (n) => `Live (${n} candles)`,
+    statusLive: 'Live',
     statusConnError: 'Connection error',
     statusReconnecting: 'Disconnected · retrying…',
     statusLoadingHistory: 'Loading history…',
@@ -488,9 +782,6 @@ const I18N = {
     bannerPairsFailed: 'Could not load the Hyperliquid pair list. Download this file and open it in a real browser.',
     bannerWsBlocked: 'The live WebSocket connection was blocked. Download this file and open it in a real browser.',
     bannerApiBlocked: 'The Hyperliquid API request was blocked. Download this file and open it in a real browser.',
-    tickSpanNote: (n, spanText) => `Sub-second candles are synthesized from trade data — Hyperliquid's API only provides the most recent ${n} trades (about ${spanText}), so older history is unavailable`,
-    aboutMin: (n) => `about ${n}m`,
-    aboutSec: (n) => `about ${n}s`,
     layoutTitle: 'Chart layout (number of charts)',
     miniSelectPair: 'Select pair',
   },
@@ -501,7 +792,37 @@ const I18N = {
     tabAll: '전체',
     tabFav: '⭐ 즐겨찾기',
     emaToggleTitle: 'EMA Band 지표 켜기/끄기',
-    emaBandLabel: 'EMA밴드',
+    emaBandLabel: 'EMA 밴드',
+    indicatorsLabel: '지표',
+    indicatorsToggleTitle: '지표 추가/제거',
+    bbLabel: '볼린저 밴드',
+    bbSettingsTitle: '볼린저 밴드',
+    bbLength: '길이',
+    bbMaType: '기준 이동평균 종류',
+    bbSource: '소스',
+    bbStdDev: '표준편차',
+    bbBasisLine: '중심선',
+    bbUpperLine: '상단',
+    bbLowerLine: '하단',
+    rsiLabel: 'RSI',
+    rsiSettingsTitle: 'RSI',
+    rsiLength: 'RSI 길이',
+    rsiSource: '소스',
+    rsiLine: 'RSI',
+    rsiMaType: '스무딩 종류',
+    rsiMaLength: '스무딩 길이',
+    rsiMaLine: '스무딩 MA',
+    rsiUpperBand: '상단 밴드',
+    rsiMiddleBand: '중간 밴드',
+    rsiLowerBand: '하단 밴드',
+    legendToggleVisible: '표시/숨김',
+    legendSettings: '설정',
+    legendRemove: '삭제',
+    legendSettingsTitle: 'EMA 밴드',
+    emaUpperBand: '상단 밴드 (최대 EMA)',
+    emaLowerBand: '하단 밴드 (최소 EMA)',
+    emaAverageLine: '평균 EMA',
+    emaAverage2Line: '평균2 EMA',
     tradeBtn: 'Hyperliquid에서 거래하기',
     statusWaiting: '연결 대기',
     stat24hVol: '24h 거래대금',
@@ -517,8 +838,6 @@ const I18N = {
     intervalGroupDays: '일 / 주 / 월',
     loadingAllPairs: '전체 페어 목록 불러오는 중…',
     noMatchingPairs: '일치하는 페어가 없습니다',
-    tickNoteSynth: '초단위 캔들은 최근 체결(trade) 데이터로 합성 — 과거 데이터가 짧을 수 있음',
-    tickNoteAgg: (base) => `${base} 캔들을 합성해서 만든 봉`,
     chartCandlestick: '캔들',
     chartHollow: '할로우 캔들',
     chartVolumeCandle1: '볼륨 캔들1',
@@ -528,7 +847,7 @@ const I18N = {
     chartArea: '영역',
     chartHeikinAshi: '하이킨 아시',
     statusConnecting: '연결 중…',
-    statusLive: (n) => `실시간 연결됨 (캔들 ${n}개)`,
+    statusLive: '실시간 연결됨',
     statusConnError: '연결 오류',
     statusReconnecting: '연결 끊김 · 재시도 중…',
     statusLoadingHistory: '과거 데이터 로딩…',
@@ -541,9 +860,6 @@ const I18N = {
     bannerPairsFailed: 'Hyperliquid 페어 목록을 불러오지 못했습니다. 이 파일을 다운로드해서 실제 브라우저로 직접 열어보세요.',
     bannerWsBlocked: '실시간 WebSocket 연결이 차단되었습니다. 이 파일을 다운로드해서 실제 브라우저로 직접 열어보세요.',
     bannerApiBlocked: 'Hyperliquid API 요청이 차단되었습니다. 이 파일을 다운로드해서 실제 브라우저로 직접 열어보세요.',
-    tickSpanNote: (n, spanText) => `초단위 캔들은 체결 데이터로 합성 — Hyperliquid API가 최근 체결 ${n}건(${spanText} 분량)만 제공해서 과거 데이터는 이보다 길게 불러올 수 없음`,
-    aboutMin: (n) => `약 ${n}분`,
-    aboutSec: (n) => `약 ${n}초`,
     layoutTitle: '차트 레이아웃 (동시에 볼 차트 개수)',
     miniSelectPair: '페어 선택',
   },
@@ -568,9 +884,12 @@ function applyLanguage() {
   });
   langBtnEn.classList.toggle('active', state.lang === 'en');
   langBtnKr.classList.toggle('active', state.lang === 'kr');
+  // 상태 문구(연결 대기/실시간 연결됨 등)는 data-i18n으로 관리하지 않고 현재 상태 키를 다시 번역해서 반영
+  document.getElementById('statusText').textContent = t(state.statusKey, ...state.statusArgs);
   // 동적으로 렌더링되는 목록/라벨들도 현재 언어로 다시 그림
   renderIntervalFavorites();
   renderChartTypeList();
+  renderIndicatorsList();
   const ct = CHART_TYPES.find(x => x.id === state.chartType);
   if (ct) chartTypeLabel.textContent = t(ct.i18nKey);
   if (dropdownDropdownOpen()) renderDropdownList(searchInput.value || '');
@@ -634,6 +953,9 @@ const DEFAULT_INTERVAL_FAVORITES = ['15m', '1h', '4h', '1d'];
 
 let state = {
   lang: (function(){ try { return localStorage.getItem('hlchart_lang') || 'en'; } catch(e) { return 'en'; } })(),
+  statusKey: 'statusWaiting', // 상단 상태 문구의 i18n 키 (언어 전환 시 이 키로 다시 번역)
+  statusArgs: [],
+  statusMode: undefined,
   interval: '15m',
   coin: null,
   label: null,
@@ -660,6 +982,25 @@ let state = {
   dropdownTab: 'ALL',
   chartType: 'Candlestick', // 기본값
   emaBandOn: false,     // EMA 밴드 지표 on/off
+  emaBandHidden: false, // 범례 눈 아이콘으로 임시로 숨김 (설정은 유지)
+  emaBandLineVisible: { max: true, min: true, avg: true, avg2: true }, // 개별 라인 표시 여부
+  emaBandColors: { max: '#00BFFF', min: '#FF4500', avg: '#26a641', avg2: '#32CD32' },
+  bbOn: false,           // Bollinger Bands 지표 on/off
+  bbHidden: false,       // 범례 눈 아이콘으로 임시 숨김
+  bbSettings: { length: 20, maType: 'SMA', source: 'close', mult: 2.0 },
+  bbLineVisible: { basis: true, upper: true, lower: true },
+  bbColors: { basis: '#2962FF', upper: '#F23645', lower: '#089981' },
+  bbSeries: null,
+  rsiOn: false,          // RSI 지표 on/off (하단 별도 패널)
+  rsiHidden: false,      // 범례 눈 아이콘으로 임시 숨김
+  rsiSettings: { length: 14, source: 'close', maType: 'SMA', maLength: 14, bbMult: 2.0 },
+  rsiLineVisible: { rsi: true, ma: true },
+  rsiColors: { rsi: '#7E57C2', ma: '#FFEB3B', bbUpper: '#26a641', bbLower: '#26a641' },
+  rsiChart: null,
+  rsiSeries: null,       // { rsi, ma?, bbUpper?, bbLower? } - ma/bb는 스무딩 타입에 따라 동적으로 생성/제거
+  rsiCalc: null,         // 라이브 틱마다 전체 재계산(setData) 대신 증분 갱신(update)하기 위한 캐시 상태
+  rsiBandSettings: { upperOn: true, upperValue: 70, middleOn: true, middleValue: 50, lowerOn: true, lowerValue: 30 },
+  rsiBands: null,        // { upper, middle, lower } - 생성된 IPriceLine 참조 (꺼져있으면 null)
   emaSeries: null,      // { max, min, avg, avg2 } 라인 시리즈들
   emaCalc: null,        // 실시간 갱신용 { anchor, current, lastTime }
   favoritePrices: {},    // { coin: 최근 1분봉 종가 } — 메인 차트와 동일하게 candle 구독의 종가를 사용
@@ -758,13 +1099,19 @@ function makeDropdownRow({ active, label, badge, star, onClick }){
     row.appendChild(badgeEl);
   }
 
-  row.onclick = onClick;
+  // 클릭 이벤트가 document까지 버블링되지 않게 막는다.
+  // (예: 지표 토글처럼 onClick 안에서 이 행을 다시 그리면 클릭된 요소가 DOM에서 사라지는데,
+  //  버블링이 document 리스너까지 가면 "바깥 클릭"으로 오인해서 드롭다운이 꺼져버림)
+  row.onclick = (e) => { e.stopPropagation(); onClick(e); };
   return row;
 }
 
 // ---------- status / banner helpers ----------
-function setStatus(text, mode){
-  document.getElementById('statusText').textContent = text;
+function setStatus(key, mode, ...args){
+  state.statusKey = key;
+  state.statusArgs = args;
+  state.statusMode = mode;
+  document.getElementById('statusText').textContent = t(key, ...args);
   const dot = document.getElementById('statusDot');
   dot.className = 'dot' + (mode ? ' ' + mode : '');
 }
@@ -773,19 +1120,6 @@ function showNetBanner(msg){
   if(msg) b.textContent = '⚠ ' + msg;
   b.classList.add('show');
 }
-function showTickNote(meta){
-  const wrap = document.getElementById('tickNoteWrap');
-  const text = document.getElementById('tickNoteText');
-  if(meta.kind === 'tick'){
-    text.textContent = t('tickNoteSynth');
-    wrap.style.display = '';
-  }else if(meta.kind === 'agg'){
-    text.textContent = t('tickNoteAgg', meta.base);
-    wrap.style.display = '';
-  }else{
-    wrap.style.display = 'none';
-  }
-}
 
 // ---------- chart setup (라이브러리 로드를 기다린 후 초기화) ----------
 const chartEl = document.getElementById('chart');
@@ -793,7 +1127,7 @@ async function initChart(){
   await window.__chartLibReady;
   if(window.__chartLibFailed || typeof LightweightCharts === 'undefined'){
     showNetBanner(t('bannerLibFailed'));
-    setStatus(t('statusLibFailed'), 'err');
+    setStatus('statusLibFailed', 'err');
     return false;
   }
   state.chart = LightweightCharts.createChart(chartEl, {
@@ -878,7 +1212,7 @@ async function initChart(){
     },
   });
   state.volumeSeries = state.chart.addHistogramSeries({
-    priceFormat: { type: 'volume' },
+    priceFormat: { type: 'custom', minMove: 1, formatter: formatVolumeAxis },
     priceScaleId: 'left',
   });
   state.chart.priceScale('left').applyOptions({
@@ -1337,6 +1671,8 @@ function pushOrUpdateBar(bar){
   if(arr.length && arr[arr.length - 1].time === bar.time) arr[arr.length - 1] = bar;
   else arr.push(bar);
   updateEmaBandLive(bar);
+  updateBBLive();
+  updateRsiLive(bar);
 }
 
 function updateSeriesWithCandle(c) {
@@ -1474,6 +1810,18 @@ function formatBigNumber(n){
   return sign + abs.toFixed(2);
 }
 
+// 왼쪽 거래량 축 전용: 소수점을 없애 라벨을 짧게 만들어 축 두께를 줄인다
+// (기본 'volume' 포맷터는 소수점 3자리까지 표시해서 축이 필요 이상으로 두꺼워짐)
+function formatVolumeAxis(n){
+  if(!Number.isFinite(n)) return '';
+  const sign = n < 0 ? '-' : '';
+  const abs = Math.abs(n);
+  if(abs >= 1e9) return sign + Math.round(abs / 1e9) + 'B';
+  if(abs >= 1e6) return sign + Math.round(abs / 1e6) + 'M';
+  if(abs >= 1e3) return sign + Math.round(abs / 1e3) + 'K';
+  return sign + Math.round(abs);
+}
+
 function renderAssetCtx(){
   const ctx = state.assetCtx;
   document.getElementById('statVol').textContent = ctx && Number.isFinite(ctx.dayNtlVlm) ? '$' + formatBigNumber(ctx.dayNtlVlm) : '—';
@@ -1595,7 +1943,7 @@ function connectWsGeneric(coin, interval){
     try{ state.ws.close(); }catch(e){}
     state.ws = null;
   }
-  setStatus(t('statusConnecting'));
+  setStatus('statusConnecting');
   const meta = INTERVAL_META[interval];
   const ws = new WebSocket('wss://api.hyperliquid.xyz/ws');
   state.ws = ws;
@@ -1607,7 +1955,7 @@ function connectWsGeneric(coin, interval){
       const wsInterval = meta.kind === 'agg' ? meta.base : interval;
       ws.send(JSON.stringify({ method: 'subscribe', subscription: { type: 'candle', coin, interval: wsInterval } }));
     }
-    setStatus(t('statusLive', state.currentBars.length), 'live');
+    setStatus('statusLive', 'live');
   };
 
   ws.onmessage = (ev) => {
@@ -1634,12 +1982,12 @@ function connectWsGeneric(coin, interval){
   };
 
   ws.onerror = () => {
-    setStatus(t('statusConnError'), 'err');
+    setStatus('statusConnError', 'err');
     showNetBanner(t('bannerWsBlocked'));
   };
   ws.onclose = () => {
     if(state.ws === ws){
-      setStatus(t('statusReconnecting'), 'err');
+      setStatus('statusReconnecting', 'err');
       setTimeout(() => { if(state.ws === ws) connectWsGeneric(coin, interval); }, 3000);
     }
   };
@@ -1706,18 +2054,27 @@ function computeEmaBandFull(bars){
 
 function createEmaBandSeries(){
   if(!state.chart || state.emaSeries) return;
-  const lineOpt = (color) => ({
+  const lineOpt = (color, visible) => ({
     color, lineWidth: 2, priceScaleId: 'right',
     lastValueVisible: true,   // 가격축(오른쪽)에 현재 값 라벨 표시
     priceLineVisible: false,  // 차트 전체를 가로지르는 점선은 4개나 겹치면 지저분해서 끔
     crosshairMarkerVisible: false,
+    visible,
   });
+  const vis = key => !state.emaBandHidden && state.emaBandLineVisible[key];
   state.emaSeries = {
-    max: state.chart.addLineSeries(lineOpt('#00BFFF')),
-    min: state.chart.addLineSeries(lineOpt('#FF4500')),
-    avg: state.chart.addLineSeries(lineOpt('#26a641')),
-    avg2: state.chart.addLineSeries(lineOpt('#32CD32')),
+    max: state.chart.addLineSeries(lineOpt(state.emaBandColors.max, vis('max'))),
+    min: state.chart.addLineSeries(lineOpt(state.emaBandColors.min, vis('min'))),
+    avg: state.chart.addLineSeries(lineOpt(state.emaBandColors.avg, vis('avg'))),
+    avg2: state.chart.addLineSeries(lineOpt(state.emaBandColors.avg2, vis('avg2'))),
   };
+}
+// 눈 아이콘/개별 라인 체크박스 상태를 실제 시리즈에 반영
+function applyEmaVisibility(){
+  if(!state.emaSeries) return;
+  ['max','min','avg','avg2'].forEach(key => {
+    state.emaSeries[key].applyOptions({ visible: !state.emaBandHidden && state.emaBandLineVisible[key] });
+  });
 }
 function removeEmaBandSeries(){
   if(!state.chart || !state.emaSeries) return;
@@ -1774,18 +2131,948 @@ function updateEmaBandLive(bar){
   state.emaSeries.avg2.update({ time: bar.time, value: avg2 });
 }
 
-const emaBandToggle = document.getElementById('emaBandToggle');
-const emaBandStateLabel = document.getElementById('emaBandStateLabel');
-emaBandToggle.onclick = () => {
-  state.emaBandOn = !state.emaBandOn;
-  emaBandToggle.classList.toggle('on', state.emaBandOn);
-  emaBandStateLabel.textContent = state.emaBandOn ? 'ON' : 'OFF';
-  if(state.emaBandOn){
+// ---------- Bollinger Bands 지표 (Pine: Bollinger Bands, BB) ----------
+function bbSourceValue(bar, source){
+  switch(source){
+    case 'open': return bar.open;
+    case 'high': return bar.high;
+    case 'low': return bar.low;
+    case 'hl2': return (bar.high + bar.low) / 2;
+    case 'hlc3': return (bar.high + bar.low + bar.close) / 3;
+    case 'ohlc4': return (bar.open + bar.high + bar.low + bar.close) / 4;
+    default: return bar.close;
+  }
+}
+// bars 전체에 대해 이동평균 배열을 계산 (SMA/EMA/SMMA(RMA)/WMA/VWMA)
+// length-1번째 인덱스 이전은 계산할 표본이 부족하므로 null
+function computeMASeries(bars, length, type, source){
+  const n = bars.length;
+  const src = bars.map(b => bbSourceValue(b, source));
+  const out = new Array(n).fill(null);
+  if(length < 1) return out;
+  if(type === 'EMA' || type === 'SMMA (RMA)'){
+    const alpha = type === 'EMA' ? 2 / (length + 1) : 1 / length;
+    let seedSum = 0;
+    for(let i = 0; i < n; i++){
+      if(i < length - 1){
+        seedSum += src[i];
+      }else if(i === length - 1){
+        seedSum += src[i];
+        out[i] = seedSum / length;
+      }else{
+        out[i] = alpha * src[i] + (1 - alpha) * out[i - 1];
+      }
+    }
+  }else if(type === 'WMA'){
+    for(let i = length - 1; i < n; i++){
+      let wsum = 0, wtotal = 0;
+      for(let k = 0; k < length; k++){ const w = length - k; wsum += src[i - k] * w; wtotal += w; }
+      out[i] = wsum / wtotal;
+    }
+  }else if(type === 'VWMA'){
+    for(let i = length - 1; i < n; i++){
+      let pv = 0, vsum = 0;
+      for(let k = 0; k < length; k++){ const b = bars[i - k]; const vol = b.volume || 0; pv += src[i - k] * vol; vsum += vol; }
+      out[i] = vsum > 0 ? pv / vsum : src[i];
+    }
+  }else{ // SMA (기본값)
+    let sum = 0;
+    for(let i = 0; i < n; i++){
+      sum += src[i];
+      if(i >= length) sum -= src[i - length];
+      if(i >= length - 1) out[i] = sum / length;
+    }
+  }
+  return out;
+}
+// 표준편차 (Pine ta.stdev 기본값과 동일하게 모집단 표준편차: N으로 나눔, source의 산술평균 기준)
+function computeStdevSeries(bars, length, source){
+  const n = bars.length;
+  const src = bars.map(b => bbSourceValue(b, source));
+  const out = new Array(n).fill(null);
+  for(let i = length - 1; i < n; i++){
+    let sum = 0;
+    for(let k = 0; k < length; k++) sum += src[i - k];
+    const mean = sum / length;
+    let sqSum = 0;
+    for(let k = 0; k < length; k++){ const d = src[i - k] - mean; sqSum += d * d; }
+    out[i] = Math.sqrt(sqSum / length);
+  }
+  return out;
+}
+function createBBSeries(){
+  if(!state.chart || state.bbSeries) return;
+  const lineOpt = (color, visible) => ({
+    color, lineWidth: 2, priceScaleId: 'right',
+    lastValueVisible: true, priceLineVisible: false, crosshairMarkerVisible: false, visible,
+    autoscaleInfoProvider: () => null,
+  });
+  const vis = key => !state.bbHidden && state.bbLineVisible[key];
+  state.bbSeries = {
+    basis: state.chart.addLineSeries(lineOpt(state.bbColors.basis, vis('basis'))),
+    upper: state.chart.addLineSeries(lineOpt(state.bbColors.upper, vis('upper'))),
+    lower: state.chart.addLineSeries(lineOpt(state.bbColors.lower, vis('lower'))),
+  };
+}
+function removeBBSeries(){
+  if(!state.chart || !state.bbSeries) return;
+  Object.values(state.bbSeries).forEach(s => state.chart.removeSeries(s));
+  state.bbSeries = null;
+}
+function applyBBVisibility(){
+  if(!state.bbSeries) return;
+  ['basis', 'upper', 'lower'].forEach(key => {
+    state.bbSeries[key].applyOptions({ visible: !state.bbHidden && state.bbLineVisible[key] });
+  });
+}
+// EMA 밴드와 달리 SMA/WMA/VWMA는 증분 갱신이 번거롭고 봉 수가 많지 않아,
+// 라이브 갱신 시에도 그냥 전체를 다시 계산한다 (충분히 빠름).
+function refreshBBFull(){
+  if(!state.bbOn) return;
+  if(!state.bbSeries) createBBSeries();
+  const bars = state.currentBars;
+  if(!bars.length){
+    Object.values(state.bbSeries).forEach(s => s.setData([]));
+    return;
+  }
+  const { length, maType, source, mult } = state.bbSettings;
+  const basisArr = computeMASeries(bars, length, maType, source);
+  const stdevArr = computeStdevSeries(bars, length, source);
+  const basisPts = [], upperPts = [], lowerPts = [];
+  for(let i = 0; i < bars.length; i++){
+    if(basisArr[i] == null || stdevArr[i] == null) continue;
+    const dev = mult * stdevArr[i];
+    basisPts.push({ time: bars[i].time, value: basisArr[i] });
+    upperPts.push({ time: bars[i].time, value: basisArr[i] + dev });
+    lowerPts.push({ time: bars[i].time, value: basisArr[i] - dev });
+  }
+  state.bbSeries.basis.setData(basisPts);
+  state.bbSeries.upper.setData(upperPts);
+  state.bbSeries.lower.setData(lowerPts);
+}
+function updateBBLive(){
+  if(!state.bbOn) return;
+  refreshBBFull();
+}
+
+// ---------- RSI 지표 (Pine: Relative Strength Index) ----------
+// RSI는 가격 스케일이 아니라 0~100 범위라서 메인 차트 위에 겹칠 수 없다.
+// 그래서 EMA밴드/BB와 달리 별도의 lightweight-charts 인스턴스(하단 패널)로 그린다.
+function computeRSI(bars, length, source){
+  const n = bars.length;
+  const src = bars.map(b => bbSourceValue(b, source));
+  const gains = new Array(n).fill(null);
+  const losses = new Array(n).fill(null);
+  for(let i = 1; i < n; i++){
+    const change = src[i] - src[i - 1];
+    gains[i] = Math.max(change, 0);
+    losses[i] = Math.max(-change, 0);
+  }
+  const alpha = 1 / length;
+  const upArr = new Array(n).fill(null);
+  const downArr = new Array(n).fill(null);
+  let seedUpSum = 0, seedDownSum = 0, seedCount = 0;
+  for(let i = 1; i < n; i++){
+    if(seedCount < length){
+      seedUpSum += gains[i];
+      seedDownSum += losses[i];
+      seedCount++;
+      if(seedCount === length){
+        upArr[i] = seedUpSum / length;
+        downArr[i] = seedDownSum / length;
+      }
+    }else{
+      upArr[i] = alpha * gains[i] + (1 - alpha) * upArr[i - 1];
+      downArr[i] = alpha * losses[i] + (1 - alpha) * downArr[i - 1];
+    }
+  }
+  const rsiArr = new Array(n).fill(null);
+  for(let i = 0; i < n; i++){
+    if(upArr[i] == null || downArr[i] == null) continue;
+    const up = upArr[i], down = downArr[i];
+    rsiArr[i] = down === 0 ? 100 : (up === 0 ? 0 : 100 - 100 / (1 + up / down));
+  }
+  return { rsiArr, upArr, downArr };
+}
+// RSI 값(또는 그 위에 얹는 스무딩 MA)처럼 "봉 배열"이 아니라 "값 배열"에 대해 이동평균을 계산하는 범용 버전.
+// 앞쪽에 null(워밍업 구간)이 있을 수 있어서, length개가 전부 유효한 연속 구간에서만 값을 채운다.
+function computeMAFromValues(values, volumes, length, type){
+  const n = values.length;
+  const out = new Array(n).fill(null);
+  if(length < 1) return out;
+  if(type === 'EMA' || type === 'SMMA (RMA)'){
+    const alpha = type === 'EMA' ? 2 / (length + 1) : 1 / length;
+    let seedSum = 0, seedCount = 0;
+    for(let i = 0; i < n; i++){
+      if(values[i] == null){ seedSum = 0; seedCount = 0; continue; }
+      if(seedCount < length){
+        seedSum += values[i];
+        seedCount++;
+        if(seedCount === length) out[i] = seedSum / length;
+      }else{
+        out[i] = alpha * values[i] + (1 - alpha) * out[i - 1];
+      }
+    }
+  }else if(type === 'WMA'){
+    for(let i = 0; i < n; i++){
+      if(values[i] == null || i < length - 1) continue;
+      let wsum = 0, wtotal = 0, ok = true;
+      for(let k = 0; k < length; k++){
+        if(values[i - k] == null){ ok = false; break; }
+        const w = length - k; wsum += values[i - k] * w; wtotal += w;
+      }
+      if(ok) out[i] = wsum / wtotal;
+    }
+  }else if(type === 'VWMA'){
+    for(let i = 0; i < n; i++){
+      if(values[i] == null || i < length - 1) continue;
+      let pv = 0, vsum = 0, ok = true;
+      for(let k = 0; k < length; k++){
+        if(values[i - k] == null){ ok = false; break; }
+        const vol = volumes[i - k] || 0; pv += values[i - k] * vol; vsum += vol;
+      }
+      if(ok) out[i] = vsum > 0 ? pv / vsum : values[i];
+    }
+  }else{ // SMA
+    for(let i = 0; i < n; i++){
+      if(values[i] == null || i < length - 1) continue;
+      let sum = 0, ok = true;
+      for(let k = 0; k < length; k++){
+        if(values[i - k] == null){ ok = false; break; }
+        sum += values[i - k];
+      }
+      if(ok) out[i] = sum / length;
+    }
+  }
+  return out;
+}
+function computeStdevFromValues(values, length){
+  const n = values.length;
+  const out = new Array(n).fill(null);
+  for(let i = 0; i < n; i++){
+    if(values[i] == null || i < length - 1) continue;
+    let sum = 0, ok = true;
+    for(let k = 0; k < length; k++){
+      if(values[i - k] == null){ ok = false; break; }
+      sum += values[i - k];
+    }
+    if(!ok) continue;
+    const mean = sum / length;
+    let sqSum = 0;
+    for(let k = 0; k < length; k++){ const d = values[i - k] - mean; sqSum += d * d; }
+    out[i] = Math.sqrt(sqSum / length);
+  }
+  return out;
+}
+
+const rsiChartEl = document.getElementById('rsiChart');
+const rsiPaneEl = document.getElementById('rsiPane');
+let rsiSyncGuard = false;
+function rsiFollowMain(range){
+  if(rsiSyncGuard || !range || !state.rsiChart) return;
+  rsiSyncGuard = true;
+  state.rsiChart.timeScale().setVisibleLogicalRange(range);
+  rsiSyncGuard = false;
+}
+function mainFollowRsi(range){
+  if(rsiSyncGuard || !range || !state.chart) return;
+  rsiSyncGuard = true;
+  state.chart.timeScale().setVisibleLogicalRange(range);
+  rsiSyncGuard = false;
+}
+new ResizeObserver(entries => {
+  if(!state.rsiChart) return;
+  const { width, height } = entries[0].contentRect;
+  state.rsiChart.resize(width, height);
+}).observe(rsiChartEl);
+
+// ---------- RSI 패널 높이 드래그로 조절 ----------
+// #rsiChart/#chart 둘 다 이미 각자의 ResizeObserver로 크기 변화를 감지하고 있어서,
+// 여기서는 .rsi-pane의 height만 바꿔주면 나머지(메인 차트/RSI 차트 리사이즈)는 자동으로 따라온다.
+(function setupRsiResize(){
+  const handle = document.getElementById('rsiResizeHandle');
+  const chartAreaEl = document.getElementById('chartArea');
+  let dragging = false, startY = 0, startHeight = 0;
+
+  function clampHeight(h){
+    const areaH = chartAreaEl.clientHeight;
+    const minH = 80;
+    const maxH = Math.max(minH, areaH - 200); // 위쪽 메인 차트 자리를 최소 200px는 남겨둠
+    return Math.min(maxH, Math.max(minH, h));
+  }
+  function pointY(e){ return e.touches ? e.touches[0].clientY : e.clientY; }
+  function onMove(e){
+    if(!dragging) return;
+    const delta = pointY(e) - startY;
+    rsiPaneEl.style.height = clampHeight(startHeight - delta) + 'px';
+    e.preventDefault();
+  }
+  function onUp(){
+    if(!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+    window.removeEventListener('touchmove', onMove);
+    window.removeEventListener('touchend', onUp);
+  }
+  function onDown(e){
+    dragging = true;
+    startY = pointY(e);
+    startHeight = rsiPaneEl.getBoundingClientRect().height;
+    handle.classList.add('dragging');
+    document.body.style.cursor = 'ns-resize';
+    document.body.style.userSelect = 'none';
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onUp);
+    e.preventDefault();
+  }
+  handle.addEventListener('mousedown', onDown);
+  handle.addEventListener('touchstart', onDown, { passive: false });
+})();
+
+function createRsiChart(){
+  if(state.rsiChart) return;
+  state.rsiChart = LightweightCharts.createChart(rsiChartEl, {
+    layout: {
+      background: { color: '#0a0d12' },
+      textColor: '#6b7686',
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 11,
+    },
+    grid: { vertLines: { color: '#151a22' }, horzLines: { color: '#151a22' } },
+    rightPriceScale: { borderColor: '#212833', visible: true, autoScale: true, mode: LightweightCharts.PriceScaleMode.Normal },
+    leftPriceScale: { visible: false },
+    timeScale: { borderColor: '#212833', timeVisible: true, secondsVisible: true },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+    handleScroll: { vertTouchDrag: true, mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true },
+    // 가격축(price)도 메인 차트처럼 드래그로 확대/축소할 수 있게 true로 바꿈.
+    // (드래그 시 lightweight-charts가 내부적으로 해당 price scale의 autoScale을 자동으로 꺼주기 때문에,
+    //  아래 autoscaleInfoProvider의 0~100 고정은 "처음 켰을 때의 기본 범위"로만 동작하고, 사용자가
+    //  축을 직접 조정한 뒤에는 그 값을 그대로 유지한다. 축 더블클릭하면 다시 0~100 기본값으로 리셋된다.)
+    handleScale: { axisPressedMouseMove: { time: true, price: true }, mouseWheel: true, pinch: true },
+  });
+  // RSI를 처음 켰을 때의 기본 범위는 0~100 (오토스케일 켜진 상태일 때만 이 함수가 참고됨)
+  state.rsiChart.priceScale('right').applyOptions({ scaleMargins: { top: 0.1, bottom: 0.1 } });
+  const lineOpt = (color, visible) => ({
+    color, lineWidth: 2, priceScaleId: 'right',
+    lastValueVisible: true, priceLineVisible: false, crosshairMarkerVisible: false, visible,
+  });
+  state.rsiSeries = {
+    rsi: state.rsiChart.addLineSeries(lineOpt(state.rsiColors.rsi, !state.rsiHidden && state.rsiLineVisible.rsi)),
+  };
+  // 0~100 고정 범위: lightweight-charts v4는 setAutoscaleInfoProvider()라는 메서드가 없고
+  // applyOptions({ autoscaleInfoProvider })로만 지정 가능 (이전 코드는 존재하지 않는 메서드를 호출해서
+  // 매번 예외를 던졌고, 그 예외 때문에 createRsiChart() 뒤에 있던 legend/dropdown 갱신 코드가
+  // 통째로 실행되지 않았던 게 "드롭다운이 ON으로 안 바뀜"/"라벨이 사라짐" 버그의 진짜 원인이었다.
+  state.rsiSeries.rsi.applyOptions({ autoscaleInfoProvider: () => ({ priceRange: { minValue: 0, maxValue: 100 } }) });
+  state.rsiBands = null;
+  applyRsiBands();
+  updateRsiExtraSeries();
+  state.chart.timeScale().subscribeVisibleLogicalRangeChange(rsiFollowMain);
+  state.rsiChart.timeScale().subscribeVisibleLogicalRangeChange(mainFollowRsi);
+  // 메인 차트의 보이는 범위를 그대로 넘겨받아 처음부터 정렬된 상태로 시작
+  const initRange = state.chart.timeScale().getVisibleLogicalRange();
+  if(initRange) state.rsiChart.timeScale().setVisibleLogicalRange(initRange);
+}
+function destroyRsiChart(){
+  if(!state.rsiChart) return;
+  if(state.chart) state.chart.timeScale().unsubscribeVisibleLogicalRangeChange(rsiFollowMain);
+  state.rsiChart.timeScale().unsubscribeVisibleLogicalRangeChange(mainFollowRsi);
+  state.rsiChart.remove();
+  state.rsiChart = null;
+  state.rsiSeries = null;
+  state.rsiBands = null;
+}
+// 상단/중간/하단 밴드(기본 70/50/30) 라인들을 설정(on/off, 값)에 맞게 만들거나 지우거나 값만 갱신한다.
+// 라벨 설정창에서 체크박스/숫자 입력을 바꿀 때, 그리고 createRsiChart()에서 처음 만들 때 호출된다.
+// 세 밴드 모두 축 라벨은 표시하지 않는다(RSI 값 자체의 축 라벨만 보이면 충분하고, 이제 축을 자유롭게
+// 드래그해서 조정할 수 있어서 고정된 70/30 숫자가 축에 같이 떠 있으면 오히려 헷갈린다).
+function applyRsiBands(){
+  if(!state.rsiSeries || !state.rsiSeries.rsi) return;
+  if(!state.rsiBands) state.rsiBands = { upper: null, middle: null, lower: null };
+  const bands = state.rsiBands;
+  const s = state.rsiBandSettings;
+  const rsiLine = state.rsiSeries.rsi;
+  const specs = [
+    { key: 'upper', on: s.upperOn, price: s.upperValue, style: LightweightCharts.LineStyle.Dashed },
+    { key: 'middle', on: s.middleOn, price: s.middleValue, style: LightweightCharts.LineStyle.Dotted },
+    { key: 'lower', on: s.lowerOn, price: s.lowerValue, style: LightweightCharts.LineStyle.Dashed },
+  ];
+  specs.forEach(({ key, on, price, style }) => {
+    if(on){
+      if(bands[key]){
+        bands[key].applyOptions({ price, lineStyle: style });
+      }else{
+        bands[key] = rsiLine.createPriceLine({
+          price, color: '#787B86', lineWidth: 1, lineStyle: style, axisLabelVisible: false, title: '',
+        });
+      }
+    }else if(bands[key]){
+      rsiLine.removePriceLine(bands[key]);
+      bands[key] = null;
+    }
+  });
+}
+// 스무딩 MA 타입에 따라 MA/BB 라인 시리즈를 동적으로 만들거나 없앤다
+function updateRsiExtraSeries(){
+  if(!state.rsiChart || !state.rsiSeries) return;
+  const { maType } = state.rsiSettings;
+  const wantMA = maType !== 'None';
+  const wantBB = maType === 'SMA + Bollinger Bands';
+  const rsiAutoscale = () => ({ priceRange: { minValue: 0, maxValue: 100 } });
+  if(wantMA && !state.rsiSeries.ma){
+    state.rsiSeries.ma = state.rsiChart.addLineSeries({
+      color: state.rsiColors.ma, lineWidth: 2, priceScaleId: 'right',
+      lastValueVisible: true, priceLineVisible: false, crosshairMarkerVisible: false,
+      visible: !state.rsiHidden && state.rsiLineVisible.ma,
+    });
+    state.rsiSeries.ma.applyOptions({ autoscaleInfoProvider: rsiAutoscale });
+  }else if(!wantMA && state.rsiSeries.ma){
+    state.rsiChart.removeSeries(state.rsiSeries.ma);
+    delete state.rsiSeries.ma;
+  }
+  if(wantBB && !state.rsiSeries.bbUpper){
+    const bbOpt = (color) => ({
+      color, lineWidth: 1, priceScaleId: 'right',
+      lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false,
+      visible: !state.rsiHidden && state.rsiLineVisible.ma,
+    });
+    state.rsiSeries.bbUpper = state.rsiChart.addLineSeries(bbOpt(state.rsiColors.bbUpper));
+    state.rsiSeries.bbLower = state.rsiChart.addLineSeries(bbOpt(state.rsiColors.bbLower));
+    state.rsiSeries.bbUpper.applyOptions({ autoscaleInfoProvider: rsiAutoscale });
+    state.rsiSeries.bbLower.applyOptions({ autoscaleInfoProvider: rsiAutoscale });
+  }else if(!wantBB && state.rsiSeries.bbUpper){
+    state.rsiChart.removeSeries(state.rsiSeries.bbUpper);
+    state.rsiChart.removeSeries(state.rsiSeries.bbLower);
+    delete state.rsiSeries.bbUpper;
+    delete state.rsiSeries.bbLower;
+  }
+}
+function refreshRsiFull(){
+  if(!state.rsiOn) return;
+  if(!state.rsiChart) createRsiChart();
+  updateRsiExtraSeries();
+  const bars = state.currentBars;
+  if(!bars.length){
+    state.rsiSeries.rsi.setData([]);
+    if(state.rsiSeries.ma) state.rsiSeries.ma.setData([]);
+    if(state.rsiSeries.bbUpper){ state.rsiSeries.bbUpper.setData([]); state.rsiSeries.bbLower.setData([]); }
+    state.rsiCalc = null;
+    return;
+  }
+  const { length, source, maType, maLength, bbMult } = state.rsiSettings;
+  const { rsiArr, upArr, downArr } = computeRSI(bars, length, source);
+  const rsiPts = [];
+  for(let i = 0; i < bars.length; i++){ if(rsiArr[i] != null) rsiPts.push({ time: bars[i].time, value: rsiArr[i] }); }
+  state.rsiSeries.rsi.setData(rsiPts);
+
+  let maArr = null;
+  if(maType !== 'None'){
+    const volumes = bars.map(b => b.volume || 0);
+    const maBaseType = maType === 'SMA + Bollinger Bands' ? 'SMA' : maType;
+    maArr = computeMAFromValues(rsiArr, volumes, maLength, maBaseType);
+    const maPts = [];
+    for(let i = 0; i < bars.length; i++){ if(maArr[i] != null) maPts.push({ time: bars[i].time, value: maArr[i] }); }
+    if(state.rsiSeries.ma) state.rsiSeries.ma.setData(maPts);
+
+    if(maType === 'SMA + Bollinger Bands' && state.rsiSeries.bbUpper){
+      const stdevArr = computeStdevFromValues(rsiArr, maLength);
+      const upperPts = [], lowerPts = [];
+      for(let i = 0; i < bars.length; i++){
+        if(maArr[i] == null || stdevArr[i] == null) continue;
+        const dev = bbMult * stdevArr[i];
+        upperPts.push({ time: bars[i].time, value: maArr[i] + dev });
+        lowerPts.push({ time: bars[i].time, value: maArr[i] - dev });
+      }
+      state.rsiSeries.bbUpper.setData(upperPts);
+      state.rsiSeries.bbLower.setData(lowerPts);
+    }
+  }
+  seedRsiCalc(bars, rsiArr, upArr, downArr, maArr);
+}
+// refreshRsiFull()은 매번 bars 전체를 O(n)으로 재계산하고 나서 chart.setData()로 전체를
+// 다시 그리는데, setData()는 series 내부 인덱스를 통째로 재구성하기 때문에 update() 한 번보다
+// 수십~수백 배 느리다(실측: bars 5천개 기준 setData 系열 호출들이 refreshRsiFull() 전체 시간의
+// 70% 이상을 차지). 라이브 틱마다 이걸 반복하면 봉 수가 많아질수록 눈에 띄게 느려진다.
+// 그래서 EMA밴드처럼 "마지막 확정 봉 기준 anchor"를 캐싱해두고, 진행 중인 봉 하나만 O(1)~O(maLength)로
+// 다시 계산해서 series.update()로만 반영한다. 설정이 바뀌거나 데이터가 새로 로드될 때만 refreshRsiFull()로
+// 전체를 다시 계산하고, 그 결과의 꼬리 부분으로 아래 캐시를 다시 채운다(seed).
+function seedRsiCalc(bars, rsiArr, upArr, downArr, maArr){
+  const n = bars.length;
+  if(n < 1){ state.rsiCalc = null; return; }
+  const { source, maLength } = state.rsiSettings;
+  const src = (i) => bbSourceValue(bars[i], source);
+  const calc = {
+    srcAnchor: n >= 2 ? src(n - 2) : null,
+    upAnchor: n >= 2 ? upArr[n - 2] : null,
+    downAnchor: n >= 2 ? downArr[n - 2] : null,
+    maAnchor: (n >= 2 && maArr) ? maArr[n - 2] : null,
+    formingTime: bars[n - 1].time,
+    formingSrc: src(n - 1),
+    formingUp: upArr[n - 1],
+    formingDown: downArr[n - 1],
+    formingRsi: rsiArr[n - 1],
+    formingMa: maArr ? maArr[n - 1] : null,
+    formingVol: bars[n - 1].volume || 0,
+    rsiWindow: [],   // 가장 최근 확정봉부터 과거 순, 최대 (maLength-1)개 (SMA/WMA/VWMA/stdev용)
+    volWindow: [],
+  };
+  const winLen = Math.max(0, maLength - 1);
+  for(let k = 0; k < winLen; k++){
+    const idx = n - 2 - k;
+    if(idx < 0 || rsiArr[idx] == null) break; // 워밍업 구간이면 창을 못 채운 채로 둔다 (증분 갱신은 자동으로 폴백)
+    calc.rsiWindow.push(rsiArr[idx]);
+    calc.volWindow.push(bars[idx].volume || 0);
+  }
+  state.rsiCalc = calc;
+}
+// 라이브 틱 하나가 들어올 때마다 전체 재계산 없이 anchor 기준으로 마지막(진행 중인) 봉만 다시 계산.
+// 캐시가 없거나 아직 워밍업 구간이면 안전하게 refreshRsiFull()로 폴백한다.
+function updateRsiIncremental(bar){
+  if(!state.rsiOn || !state.rsiSeries) return;
+  const calc = state.rsiCalc;
+  if(!calc || calc.upAnchor == null || calc.downAnchor == null){
+    refreshRsiFull();
+    return;
+  }
+  if(bar.time < calc.formingTime){
+    // 시간이 역행하는 봉은 정상 흐름이 아니므로 안전하게 전체 재계산으로 폴백
+    refreshRsiFull();
+    return;
+  }
+  const { length, source, maType, maLength, bbMult } = state.rsiSettings;
+  if(bar.time > calc.formingTime){
+    // 이전에 진행 중이던 봉이 이제 확정됨 -> anchor로 승격
+    calc.srcAnchor = calc.formingSrc;
+    calc.upAnchor = calc.formingUp;
+    calc.downAnchor = calc.formingDown;
+    calc.maAnchor = calc.formingMa;
+    if(calc.formingRsi != null){
+      const maxWin = Math.max(0, maLength - 1);
+      calc.rsiWindow.unshift(calc.formingRsi);
+      calc.volWindow.unshift(calc.formingVol || 0);
+      if(calc.rsiWindow.length > maxWin) calc.rsiWindow.length = maxWin;
+      if(calc.volWindow.length > maxWin) calc.volWindow.length = maxWin;
+    }
+  }
+  calc.formingTime = bar.time;
+
+  const src = bbSourceValue(bar, source);
+  const alpha = 1 / length;
+  const change = src - calc.srcAnchor;
+  const gain = Math.max(change, 0), loss = Math.max(-change, 0);
+  const up = alpha * gain + (1 - alpha) * calc.upAnchor;
+  const down = alpha * loss + (1 - alpha) * calc.downAnchor;
+  const rsi = down === 0 ? 100 : (up === 0 ? 0 : 100 - 100 / (1 + up / down));
+  calc.formingSrc = src;
+  calc.formingUp = up;
+  calc.formingDown = down;
+  calc.formingRsi = rsi;
+  calc.formingVol = bar.volume || 0;
+  state.rsiSeries.rsi.update({ time: bar.time, value: rsi });
+
+  if(maType === 'None'){ calc.formingMa = null; return; }
+  const maBaseType = maType === 'SMA + Bollinger Bands' ? 'SMA' : maType;
+  const winReady = calc.rsiWindow.length >= maLength - 1;
+  let maVal = null;
+  if(maBaseType === 'EMA' || maBaseType === 'SMMA (RMA)'){
+    if(calc.maAnchor == null){ refreshRsiFull(); return; }
+    const a = maBaseType === 'EMA' ? 2 / (maLength + 1) : 1 / maLength;
+    maVal = a * rsi + (1 - a) * calc.maAnchor;
+  }else if(winReady && maBaseType === 'SMA'){
+    let sum = rsi;
+    for(let k = 0; k < maLength - 1; k++) sum += calc.rsiWindow[k];
+    maVal = sum / maLength;
+  }else if(winReady && maBaseType === 'WMA'){
+    let wsum = rsi * maLength, wtotal = maLength;
+    for(let k = 0; k < maLength - 1; k++){ const w = maLength - 1 - k; wsum += calc.rsiWindow[k] * w; wtotal += w; }
+    maVal = wsum / wtotal;
+  }else if(winReady && maBaseType === 'VWMA'){
+    const curVol = bar.volume || 0;
+    let pv = rsi * curVol, vsum = curVol;
+    for(let k = 0; k < maLength - 1; k++){ pv += calc.rsiWindow[k] * calc.volWindow[k]; vsum += calc.volWindow[k]; }
+    maVal = vsum > 0 ? pv / vsum : rsi;
+  }
+  calc.formingMa = maVal;
+  if(maVal == null){
+    // 창이 아직 안 찼으면 (막 켰거나 maLength를 늘린 직후) 한 번은 전체 재계산으로 정확히 채운다
+    refreshRsiFull();
+    return;
+  }
+  if(state.rsiSeries.ma) state.rsiSeries.ma.update({ time: bar.time, value: maVal });
+
+  if(maType === 'SMA + Bollinger Bands' && state.rsiSeries.bbUpper){
+    let sq = (rsi - maVal) * (rsi - maVal);
+    for(let k = 0; k < maLength - 1; k++){ const d = calc.rsiWindow[k] - maVal; sq += d * d; }
+    const stdev = Math.sqrt(sq / maLength);
+    const dev = bbMult * stdev;
+    state.rsiSeries.bbUpper.update({ time: bar.time, value: maVal + dev });
+    state.rsiSeries.bbLower.update({ time: bar.time, value: maVal - dev });
+  }
+}
+function updateRsiLive(bar){
+  if(!state.rsiOn) return;
+  if(bar) updateRsiIncremental(bar);
+  else refreshRsiFull();
+}
+function applyRsiVisibility(){
+  if(!state.rsiSeries) return;
+  state.rsiSeries.rsi.applyOptions({ visible: !state.rsiHidden && state.rsiLineVisible.rsi });
+  if(state.rsiSeries.ma) state.rsiSeries.ma.applyOptions({ visible: !state.rsiHidden && state.rsiLineVisible.ma });
+  if(state.rsiSeries.bbUpper){
+    state.rsiSeries.bbUpper.applyOptions({ visible: !state.rsiHidden && state.rsiLineVisible.ma });
+    state.rsiSeries.bbLower.applyOptions({ visible: !state.rsiHidden && state.rsiLineVisible.ma });
+  }
+}
+
+function setEmaBandOn(on){
+  state.emaBandOn = on;
+  if(on){
     refreshEmaBandFull();
   }else{
     removeEmaBandSeries();
   }
+  renderEmaLegend();
+  renderIndicatorsList();
+}
+function setBBOn(on){
+  state.bbOn = on;
+  if(on){
+    refreshBBFull();
+  }else{
+    removeBBSeries();
+  }
+  renderBBLegend();
+  renderIndicatorsList();
+}
+function setRsiOn(on){
+  state.rsiOn = on;
+  if(on){
+    rsiPaneEl.style.display = 'block';
+    refreshRsiFull(); // 내부에서 필요하면 createRsiChart() 호출
+    requestAnimationFrame(() => {
+      if(state.rsiChart) state.rsiChart.resize(rsiChartEl.clientWidth, rsiChartEl.clientHeight);
+    });
+  }else{
+    rsiPaneEl.style.display = 'none';
+    destroyRsiChart();
+  }
+  renderRsiLegend();
+  renderIndicatorsList();
+}
+
+// ---------- 지표(Indicators) 드롭다운 ----------
+// 새 지표를 추가하려면 이 배열에 { id, labelKey, isOn, toggle } 형태로 추가하면 된다.
+const INDICATORS = [
+  {
+    id: 'emaBand',
+    labelKey: 'emaBandLabel',
+    isOn: () => state.emaBandOn,
+    toggle: () => setEmaBandOn(!state.emaBandOn),
+  },
+  {
+    id: 'bb',
+    labelKey: 'bbLabel',
+    isOn: () => state.bbOn,
+    toggle: () => setBBOn(!state.bbOn),
+  },
+  {
+    id: 'rsi',
+    labelKey: 'rsiLabel',
+    isOn: () => state.rsiOn,
+    toggle: () => setRsiOn(!state.rsiOn),
+  },
+];
+
+const indicatorsToggle = document.getElementById('indicatorsToggle');
+const indicatorsDropdown = document.getElementById('indicatorsDropdown');
+const indicatorsList = document.getElementById('indicatorsList');
+
+function renderIndicatorsList(){
+  indicatorsList.innerHTML = '';
+  INDICATORS.forEach(ind => {
+    const on = ind.isOn();
+    indicatorsList.appendChild(makeDropdownRow({
+      active: on,
+      label: t(ind.labelKey),
+      badge: { className: on ? 'ON' : 'OFF', text: on ? 'ON' : 'OFF' },
+      onClick: () => ind.toggle(), // 드롭다운은 열어둔 채로 켜고/끌 수 있게 닫지 않음
+    }));
+  });
+}
+const indicatorsDropdownCtrl = createDropdown(indicatorsToggle, indicatorsDropdown, renderIndicatorsList);
+
+// ---------- 차트 좌상단 지표 범례 (TradingView 스타일) ----------
+// 설정창(⚙)은 화면 정중앙에 모달처럼 뜬다 (RSI처럼 화면 아래쪽 패널의 라벨을 누르면
+// 바로 아래에 붙이는 방식으론 화면 밖으로 잘려서 안 보이는 문제가 있었음).
+// 여러 개가 동시에 열리면 겹치니, 하나를 열면 나머지는 자동으로 닫는다.
+const legendSettingsBackdrop = document.getElementById('legendSettingsBackdrop');
+const ALL_LEGEND_SETTINGS = [];
+function openLegendSettings(panel){
+  ALL_LEGEND_SETTINGS.forEach(p => { if(p !== panel) p.classList.remove('open'); });
+  panel.classList.add('open');
+  legendSettingsBackdrop.classList.add('open');
+}
+function closeLegendSettings(panel){
+  panel.classList.remove('open');
+  if(!ALL_LEGEND_SETTINGS.some(p => p.classList.contains('open'))) legendSettingsBackdrop.classList.remove('open');
+}
+function toggleLegendSettings(panel){
+  panel.classList.contains('open') ? closeLegendSettings(panel) : openLegendSettings(panel);
+}
+// legend-settings는 position:fixed로 화면 중앙에 띄우는데, 원래 위치인 .chart-legend가
+// z-index로 별도 스태킹 컨텍스트를 만들어서 그 안에 있으면 z-index:1000을 줘도 소용없이
+// body 바로 아래에 있는 backdrop(z-index:999)에 가려져 버린다. body의 바로 아래 자식으로 옮겨서 해결.
+function registerLegendSettings(panel){
+  document.body.appendChild(panel);
+  ALL_LEGEND_SETTINGS.push(panel);
+}
+legendSettingsBackdrop.addEventListener('click', () => {
+  ALL_LEGEND_SETTINGS.forEach(p => p.classList.remove('open'));
+  legendSettingsBackdrop.classList.remove('open');
+});
+
+const legendEmaBand = document.getElementById('legendEmaBand');
+const legendEyeBtn = document.getElementById('legendEyeBtn');
+const legendGearBtn = document.getElementById('legendGearBtn');
+const legendTrashBtn = document.getElementById('legendTrashBtn');
+const legendSettings = document.getElementById('legendSettings');
+registerLegendSettings(legendSettings);
+
+function renderEmaLegend(){
+  legendEmaBand.style.display = state.emaBandOn ? 'flex' : 'none';
+  legendEmaBand.classList.toggle('hidden', state.emaBandHidden);
+  legendEyeBtn.classList.toggle('active', !state.emaBandHidden);
+  if(!state.emaBandOn) closeLegendSettings(legendSettings);
+}
+
+legendEyeBtn.onclick = (e) => {
+  e.stopPropagation();
+  state.emaBandHidden = !state.emaBandHidden;
+  applyEmaVisibility();
+  renderEmaLegend();
 };
+legendGearBtn.onclick = (e) => {
+  e.stopPropagation();
+  toggleLegendSettings(legendSettings);
+};
+legendTrashBtn.onclick = (e) => {
+  e.stopPropagation();
+  closeLegendSettings(legendSettings);
+  setEmaBandOn(false);
+};
+document.addEventListener('click', (e) => {
+  if(legendSettings.classList.contains('open') && !legendSettings.contains(e.target) && e.target !== legendGearBtn){
+    closeLegendSettings(legendSettings);
+  }
+});
+
+const EMA_LEGEND_LINES = [
+  { key: 'max', checkbox: 'emaShowMax', color: 'emaColorMax' },
+  { key: 'min', checkbox: 'emaShowMin', color: 'emaColorMin' },
+  { key: 'avg', checkbox: 'emaShowAvg', color: 'emaColorAvg' },
+  { key: 'avg2', checkbox: 'emaShowAvg2', color: 'emaColorAvg2' },
+];
+EMA_LEGEND_LINES.forEach(({ key, checkbox, color }) => {
+  document.getElementById(checkbox).addEventListener('change', (e) => {
+    state.emaBandLineVisible[key] = e.target.checked;
+    applyEmaVisibility();
+  });
+  document.getElementById(color).addEventListener('input', (e) => {
+    state.emaBandColors[key] = e.target.value;
+    if(state.emaSeries) state.emaSeries[key].applyOptions({ color: e.target.value });
+  });
+});
+
+// ---------- Bollinger Bands 범례 ----------
+const legendBB = document.getElementById('legendBB');
+const legendBBEyeBtn = document.getElementById('legendBBEyeBtn');
+const legendBBGearBtn = document.getElementById('legendBBGearBtn');
+const legendBBTrashBtn = document.getElementById('legendBBTrashBtn');
+const legendBBSettings = document.getElementById('legendBBSettings');
+registerLegendSettings(legendBBSettings);
+
+function renderBBLegend(){
+  legendBB.style.display = state.bbOn ? 'flex' : 'none';
+  legendBB.classList.toggle('hidden', state.bbHidden);
+  legendBBEyeBtn.classList.toggle('active', !state.bbHidden);
+  if(!state.bbOn) closeLegendSettings(legendBBSettings);
+}
+
+legendBBEyeBtn.onclick = (e) => {
+  e.stopPropagation();
+  state.bbHidden = !state.bbHidden;
+  applyBBVisibility();
+  renderBBLegend();
+};
+legendBBGearBtn.onclick = (e) => {
+  e.stopPropagation();
+  toggleLegendSettings(legendBBSettings);
+};
+legendBBTrashBtn.onclick = (e) => {
+  e.stopPropagation();
+  closeLegendSettings(legendBBSettings);
+  setBBOn(false);
+};
+document.addEventListener('click', (e) => {
+  if(legendBBSettings.classList.contains('open') && !legendBBSettings.contains(e.target) && e.target !== legendBBGearBtn){
+    closeLegendSettings(legendBBSettings);
+  }
+});
+
+document.getElementById('bbLength').addEventListener('change', (e) => {
+  const v = Math.max(1, Math.round(parseFloat(e.target.value)) || 20);
+  state.bbSettings.length = v;
+  e.target.value = v;
+  refreshBBFull();
+});
+document.getElementById('bbMaType').addEventListener('change', (e) => {
+  state.bbSettings.maType = e.target.value;
+  refreshBBFull();
+});
+document.getElementById('bbSource').addEventListener('change', (e) => {
+  state.bbSettings.source = e.target.value;
+  refreshBBFull();
+});
+document.getElementById('bbMult').addEventListener('change', (e) => {
+  let v = parseFloat(e.target.value);
+  if(!Number.isFinite(v)) v = 2.0;
+  v = Math.min(50, Math.max(0.001, v));
+  state.bbSettings.mult = v;
+  e.target.value = v;
+  refreshBBFull();
+});
+
+const BB_LEGEND_LINES = [
+  { key: 'basis', checkbox: 'bbShowBasis', color: 'bbColorBasis' },
+  { key: 'upper', checkbox: 'bbShowUpper', color: 'bbColorUpper' },
+  { key: 'lower', checkbox: 'bbShowLower', color: 'bbColorLower' },
+];
+BB_LEGEND_LINES.forEach(({ key, checkbox, color }) => {
+  document.getElementById(checkbox).addEventListener('change', (e) => {
+    state.bbLineVisible[key] = e.target.checked;
+    applyBBVisibility();
+  });
+  document.getElementById(color).addEventListener('input', (e) => {
+    state.bbColors[key] = e.target.value;
+    if(state.bbSeries) state.bbSeries[key].applyOptions({ color: e.target.value });
+  });
+});
+
+// ---------- RSI 범례 ----------
+const legendRSI = document.getElementById('legendRSI');
+const legendRSIEyeBtn = document.getElementById('legendRSIEyeBtn');
+const legendRSIGearBtn = document.getElementById('legendRSIGearBtn');
+const legendRSITrashBtn = document.getElementById('legendRSITrashBtn');
+const legendRSISettings = document.getElementById('legendRSISettings');
+const rsiBBMultRow = document.getElementById('rsiBBMultRow');
+registerLegendSettings(legendRSISettings);
+
+function renderRsiLegend(){
+  legendRSI.style.display = state.rsiOn ? 'flex' : 'none';
+  legendRSI.classList.toggle('hidden', state.rsiHidden);
+  legendRSIEyeBtn.classList.toggle('active', !state.rsiHidden);
+  if(!state.rsiOn) closeLegendSettings(legendRSISettings);
+}
+
+legendRSIEyeBtn.onclick = (e) => {
+  e.stopPropagation();
+  state.rsiHidden = !state.rsiHidden;
+  applyRsiVisibility();
+  renderRsiLegend();
+};
+legendRSIGearBtn.onclick = (e) => {
+  e.stopPropagation();
+  toggleLegendSettings(legendRSISettings);
+};
+legendRSITrashBtn.onclick = (e) => {
+  e.stopPropagation();
+  closeLegendSettings(legendRSISettings);
+  setRsiOn(false);
+};
+document.addEventListener('click', (e) => {
+  if(legendRSISettings.classList.contains('open') && !legendRSISettings.contains(e.target) && e.target !== legendRSIGearBtn){
+    closeLegendSettings(legendRSISettings);
+  }
+});
+
+document.getElementById('rsiLength').addEventListener('change', (e) => {
+  const v = Math.max(1, Math.round(parseFloat(e.target.value)) || 14);
+  state.rsiSettings.length = v;
+  e.target.value = v;
+  refreshRsiFull();
+});
+document.getElementById('rsiSource').addEventListener('change', (e) => {
+  state.rsiSettings.source = e.target.value;
+  refreshRsiFull();
+});
+document.getElementById('rsiShowLine').addEventListener('change', (e) => {
+  state.rsiLineVisible.rsi = e.target.checked;
+  applyRsiVisibility();
+});
+document.getElementById('rsiColorLine').addEventListener('input', (e) => {
+  state.rsiColors.rsi = e.target.value;
+  if(state.rsiSeries) state.rsiSeries.rsi.applyOptions({ color: e.target.value });
+});
+document.getElementById('rsiMaType').addEventListener('change', (e) => {
+  state.rsiSettings.maType = e.target.value;
+  rsiBBMultRow.style.display = e.target.value === 'SMA + Bollinger Bands' ? 'flex' : 'none';
+  refreshRsiFull();
+});
+document.getElementById('rsiMaLength').addEventListener('change', (e) => {
+  const v = Math.max(1, Math.round(parseFloat(e.target.value)) || 14);
+  state.rsiSettings.maLength = v;
+  e.target.value = v;
+  refreshRsiFull();
+});
+document.getElementById('rsiBBMult').addEventListener('change', (e) => {
+  let v = parseFloat(e.target.value);
+  if(!Number.isFinite(v)) v = 2.0;
+  v = Math.min(50, Math.max(0.001, v));
+  state.rsiSettings.bbMult = v;
+  e.target.value = v;
+  refreshRsiFull();
+});
+document.getElementById('rsiShowMa').addEventListener('change', (e) => {
+  state.rsiLineVisible.ma = e.target.checked;
+  applyRsiVisibility();
+});
+document.getElementById('rsiColorMa').addEventListener('input', (e) => {
+  state.rsiColors.ma = e.target.value;
+  if(state.rsiSeries && state.rsiSeries.ma) state.rsiSeries.ma.applyOptions({ color: e.target.value });
+});
+document.getElementById('rsiUpperOn').addEventListener('change', (e) => {
+  state.rsiBandSettings.upperOn = e.target.checked;
+  applyRsiBands();
+});
+document.getElementById('rsiUpperValue').addEventListener('change', (e) => {
+  const v = parseFloat(e.target.value);
+  if(Number.isFinite(v)) state.rsiBandSettings.upperValue = v;
+  applyRsiBands();
+});
+document.getElementById('rsiMiddleOn').addEventListener('change', (e) => {
+  state.rsiBandSettings.middleOn = e.target.checked;
+  applyRsiBands();
+});
+document.getElementById('rsiMiddleValue').addEventListener('change', (e) => {
+  const v = parseFloat(e.target.value);
+  if(Number.isFinite(v)) state.rsiBandSettings.middleValue = v;
+  applyRsiBands();
+});
+document.getElementById('rsiLowerOn').addEventListener('change', (e) => {
+  state.rsiBandSettings.lowerOn = e.target.checked;
+  applyRsiBands();
+});
+document.getElementById('rsiLowerValue').addEventListener('change', (e) => {
+  const v = parseFloat(e.target.value);
+  if(Number.isFinite(v)) state.rsiBandSettings.lowerValue = v;
+  applyRsiBands();
+});
 
 // ---------- 뒤로 스크롤하면 과거 데이터를 이어서 불러오기 ----------
 // tick(초단위) 인터벌은 recentTrades가 "최근 N건"만 주기 때문에 더 불러올 방법이 없음
@@ -1817,6 +3104,8 @@ async function loadMoreHistory(){
     state.candleSeries.setData(state.currentBars);
     state.volumeSeries.setData(state.currentBars.map(volPoint));
     refreshEmaBandFull();
+    refreshBBFull();
+    refreshRsiFull();
     if(range){
       state.chart.timeScale().setVisibleLogicalRange({
         from: range.from + olderBars.length,
@@ -1864,20 +3153,13 @@ async function selectPair(pair){
   }
 
   const meta = INTERVAL_META[state.interval];
-  showTickNote(meta);
   stopGapFiller();
-  setStatus(t('statusLoadingHistory'));
+  setStatus('statusLoadingHistory');
   try{
     let bars;
     if(meta.kind === 'tick'){
       const trades = await info({ type: 'recentTrades', coin: pair.coin });
       bars = fillGaps(buildTickCandles(trades, meta.ms), meta.ms / 1000);
-      if(trades.length >= 2){
-        const times = trades.map(tr => tr.time);
-        const spanSec = Math.round((Math.max(...times) - Math.min(...times)) / 1000);
-        const spanText = spanSec >= 60 ? t('aboutMin', Math.round(spanSec / 60)) : t('aboutSec', spanSec);
-        document.getElementById('tickNoteText').textContent = t('tickSpanNote', trades.length, spanText);
-      }
     }else if(meta.kind === 'agg'){
       const history = await fetchHistory(pair.coin, meta.base);
       bars = fillGaps(buildAggCandles(history.map(toChartCandle), meta.ms), meta.ms / 1000);
@@ -1912,6 +3194,8 @@ async function selectPair(pair){
     state.currentBars = bars;
     recreateMainSeries();
     refreshEmaBandFull();
+    refreshBBFull();
+    refreshRsiFull();
     state.noMoreHistory = meta.kind === 'tick'; // recentTrades는 시간 범위 조회가 없어 페이지네이션 불가
     if(bars.length){
       state.lastCandle = bars[bars.length - 1];
@@ -1930,7 +3214,7 @@ async function selectPair(pair){
     if(meta.kind !== 'native') startGapFiller(meta.ms);
   }catch(err){
     console.error(err);
-    setStatus(t('statusError', err.message), 'err');
+    setStatus('statusError', 'err', err.message);
     if(err instanceof TypeError && /fetch/i.test(err.message)){
       showNetBanner(t('bannerApiBlocked'));
     }
@@ -2436,14 +3720,14 @@ langBtnKr.addEventListener('click', () => setLanguage('kr'));
 async function boot(){
   applyLanguage();
   renderIntervalFavorites();
-  setStatus(t('statusLoadingPairs'));
+  setStatus('statusLoadingPairs');
   try{
     state.allPairs = await loadAllPairs();
     state.allPairsLoaded = true;
   }catch(err){
     console.error(err);
     showNetBanner(t('bannerPairsFailed'));
-    setStatus(t('statusPairLoadFailed'), 'err');
+    setStatus('statusPairLoadFailed', 'err');
     return;
   }
 
@@ -2458,7 +3742,7 @@ async function boot(){
   if(state.favorites.length){
     selectPair(state.favorites[0]);
   }else{
-    setStatus(t('statusNoDefaultFav'), 'err');
+    setStatus('statusNoDefaultFav', 'err');
   }
 }
 

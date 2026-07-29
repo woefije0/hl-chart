@@ -4,17 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HL Chart — Hyperliquid Terminal</title>
-
-<!-- Open Graph / Twitter Card: 링크 공유 시 미리보기 카드용 -->
-<meta property="og:title" content="HL Chart — Hyperliquid Terminal">
-<meta property="og:description" content="Free real-time chart terminal for Hyperliquid. Live candles, indicators, EN/KR support.">
-<meta property="og:image" content="https://woefije0.github.io/hl-chart/og_banner.png">
-<meta property="og:url" content="https://woefije0.github.io/hl-chart/">
-<meta property="og:type" content="website">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="HL Chart — Hyperliquid Terminal">
-<meta name="twitter:description" content="Free real-time chart terminal for Hyperliquid. Live candles, indicators, EN/KR support.">
-<meta name="twitter:image" content="https://woefije0.github.io/hl-chart/og_banner.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script>
@@ -275,6 +264,7 @@
     background: var(--bg);
   }
   #rsiChart{ position:absolute; inset:0; }
+  #macdChart{ position:absolute; inset:0; }
   .rsi-resize-handle{
     position:absolute; top:-4px; left:0; right:0; height:8px;
     cursor:ns-resize; z-index:15;
@@ -350,6 +340,21 @@
   }
   .legend-select:focus, .legend-number:focus{ border-color: var(--accent-dim); }
   .legend-settings-divider{ height:1px; background:var(--line); margin:6px 0; }
+  .legend-add-line-btn{
+    width:100%; background:var(--panel-2); border:1px dashed var(--line); border-radius:6px;
+    padding:7px; color:var(--text-dim); font-family:'JetBrains Mono', monospace; font-size:11px;
+    cursor:pointer; margin-top:2px;
+  }
+  .legend-add-line-btn:hover{ background:var(--panel); color:var(--text); border-color:var(--accent-dim); }
+  .ma-ribbon-line-head{ display:flex; align-items:center; justify-content:space-between; gap:6px; }
+  .ma-ribbon-line-head label{ flex:1; min-width:0; }
+  .ma-ribbon-line-head label span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ma-ribbon-remove-btn{
+    width:20px; height:20px; flex:none; border:none; background:none; cursor:pointer;
+    color:var(--text-dim); border-radius:4px; display:flex; align-items:center; justify-content:center;
+  }
+  .ma-ribbon-remove-btn:hover{ color:var(--red, #ef6f6f); background:var(--panel); }
+  .ma-ribbon-remove-btn svg{ width:13px; height:13px; }
 
   .footer{
     padding:6px 18px; border-top:1px solid var(--line); background:var(--panel);
@@ -605,6 +610,26 @@
             </div>
           </div>
         </div>
+        <div class="legend-item" id="legendMaRibbon" style="display:none">
+          <span class="legend-name" data-i18n="maRibbonLabel">MA Ribbon</span>
+          <span class="legend-icons">
+            <button class="legend-icon" id="legendMaRibbonEyeBtn" data-i18n-title="legendToggleVisible" title="Toggle visibility">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="legend-icon" id="legendMaRibbonGearBtn" data-i18n-title="legendSettings" title="Settings">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+            <button class="legend-icon" id="legendMaRibbonTrashBtn" data-i18n-title="legendRemove" title="Remove">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+            </button>
+          </span>
+          <div class="legend-settings" id="legendMaRibbonSettings" style="width:230px">
+            <div class="legend-settings-title" data-i18n="maRibbonSettingsTitle">MA RIBBON</div>
+            <div id="maRibbonLinesContainer"></div>
+            <div class="legend-settings-divider"></div>
+            <button type="button" class="legend-add-line-btn" id="maRibbonAddLineBtn" data-i18n="maRibbonAddLine">+ Add Line</button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="rsi-pane" id="rsiPane" style="display:none">
@@ -689,6 +714,79 @@
         </div>
       </div>
     </div>
+    <div class="rsi-pane" id="macdPane" style="display:none">
+      <div class="rsi-resize-handle" id="macdResizeHandle"></div>
+      <div id="macdChart"></div>
+      <div class="chart-legend" id="macdLegendWrap">
+        <div class="legend-item" id="legendMACD">
+          <span class="legend-name" data-i18n="macdLabel">MACD</span>
+          <span class="legend-icons">
+            <button class="legend-icon" id="legendMACDEyeBtn" data-i18n-title="legendToggleVisible" title="Toggle visibility">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="legend-icon" id="legendMACDGearBtn" data-i18n-title="legendSettings" title="Settings">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+            <button class="legend-icon" id="legendMACDTrashBtn" data-i18n-title="legendRemove" title="Remove">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+            </button>
+          </span>
+          <div class="legend-settings" id="legendMACDSettings" style="width:230px">
+            <div class="legend-settings-title" data-i18n="macdSettingsTitle">MACD</div>
+            <div class="legend-settings-row field">
+              <span class="field-label" data-i18n="macdSource">Source</span>
+              <select class="legend-select" id="macdSource">
+                <option value="close">close</option>
+                <option value="open">open</option>
+                <option value="high">high</option>
+                <option value="low">low</option>
+                <option value="hl2">hl2</option>
+                <option value="hlc3">hlc3</option>
+                <option value="ohlc4">ohlc4</option>
+              </select>
+            </div>
+            <div class="legend-settings-row field">
+              <span class="field-label" data-i18n="macdFastLen">Fast Length</span>
+              <input type="number" class="legend-number" id="macdFastLen" min="1" step="1" value="12">
+            </div>
+            <div class="legend-settings-row field">
+              <span class="field-label" data-i18n="macdSlowLen">Slow Length</span>
+              <input type="number" class="legend-number" id="macdSlowLen" min="1" step="1" value="26">
+            </div>
+            <div class="legend-settings-row field">
+              <span class="field-label" data-i18n="macdSigLen">Signal Length</span>
+              <input type="number" class="legend-number" id="macdSigLen" min="1" step="1" value="9">
+            </div>
+            <div class="legend-settings-row field">
+              <span class="field-label" data-i18n="macdOscType">Oscillator MA Type</span>
+              <select class="legend-select" id="macdOscType">
+                <option value="EMA">EMA</option>
+                <option value="SMA">SMA</option>
+              </select>
+            </div>
+            <div class="legend-settings-row field">
+              <span class="field-label" data-i18n="macdSigType">Signal MA Type</span>
+              <select class="legend-select" id="macdSigType">
+                <option value="EMA">EMA</option>
+                <option value="SMA">SMA</option>
+              </select>
+            </div>
+            <div class="legend-settings-divider"></div>
+            <div class="legend-settings-row">
+              <label><input type="checkbox" id="macdShowMacd" checked><span data-i18n="macdLineLabel">MACD</span></label>
+              <input type="color" class="legend-color-dot" id="macdColorMacd" value="#2962FF">
+            </div>
+            <div class="legend-settings-row">
+              <label><input type="checkbox" id="macdShowSignal" checked><span data-i18n="macdSignalLabel">Signal</span></label>
+              <input type="color" class="legend-color-dot" id="macdColorSignal" value="#ff6d00">
+            </div>
+            <div class="legend-settings-row">
+              <label><input type="checkbox" id="macdShowHist" checked><span data-i18n="macdHistLabel">Histogram</span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -737,6 +835,12 @@ const I18N = {
     bbBasisLine: 'Basis',
     bbUpperLine: 'Upper',
     bbLowerLine: 'Lower',
+    maRibbonLabel: 'MA Ribbon',
+    maRibbonSettingsTitle: 'MA RIBBON',
+    maRibbonType: 'Type',
+    maRibbonSource: 'Source',
+    maRibbonLength: 'Length',
+    maRibbonAddLine: '+ Add Line',
     rsiLabel: 'RSI',
     rsiSettingsTitle: 'RSI',
     rsiLength: 'RSI Length',
@@ -748,6 +852,17 @@ const I18N = {
     rsiUpperBand: 'Upper Band',
     rsiMiddleBand: 'Middle Band',
     rsiLowerBand: 'Lower Band',
+    macdLabel: 'MACD',
+    macdSettingsTitle: 'MACD',
+    macdSource: 'Source',
+    macdFastLen: 'Fast Length',
+    macdSlowLen: 'Slow Length',
+    macdSigLen: 'Signal Length',
+    macdOscType: 'Oscillator MA Type',
+    macdSigType: 'Signal MA Type',
+    macdLineLabel: 'MACD',
+    macdSignalLabel: 'Signal',
+    macdHistLabel: 'Histogram',
     legendToggleVisible: 'Toggle visibility',
     legendSettings: 'Settings',
     legendRemove: 'Remove',
@@ -777,6 +892,7 @@ const I18N = {
     chartVolumeCandle2: 'Volume Candle2',
     chartBar: 'Bar',
     chartLine: 'Line',
+    chartBaseline: 'Baseline',
     chartArea: 'Area',
     chartHeikinAshi: 'Heikin Ashi',
     statusConnecting: 'Connecting…',
@@ -815,6 +931,12 @@ const I18N = {
     bbBasisLine: '중심선',
     bbUpperLine: '상단',
     bbLowerLine: '하단',
+    maRibbonLabel: 'MA 리본',
+    maRibbonSettingsTitle: 'MA 리본',
+    maRibbonType: '종류',
+    maRibbonSource: '소스',
+    maRibbonLength: '길이',
+    maRibbonAddLine: '+ 라인 추가',
     rsiLabel: 'RSI',
     rsiSettingsTitle: 'RSI',
     rsiLength: 'RSI 길이',
@@ -826,6 +948,17 @@ const I18N = {
     rsiUpperBand: '상단 밴드',
     rsiMiddleBand: '중간 밴드',
     rsiLowerBand: '하단 밴드',
+    macdLabel: 'MACD',
+    macdSettingsTitle: 'MACD',
+    macdSource: '소스',
+    macdFastLen: '빠른선 길이',
+    macdSlowLen: '느린선 길이',
+    macdSigLen: '시그널 길이',
+    macdOscType: '오실레이터 이동평균 종류',
+    macdSigType: '시그널 이동평균 종류',
+    macdLineLabel: 'MACD',
+    macdSignalLabel: '시그널',
+    macdHistLabel: '히스토그램',
     legendToggleVisible: '표시/숨김',
     legendSettings: '설정',
     legendRemove: '삭제',
@@ -855,6 +988,7 @@ const I18N = {
     chartVolumeCandle2: '볼륨 캔들2',
     chartBar: '바',
     chartLine: '라인',
+    chartBaseline: '기준선',
     chartArea: '영역',
     chartHeikinAshi: '하이킨 아시',
     statusConnecting: '연결 중…',
@@ -901,6 +1035,7 @@ function applyLanguage() {
   renderIntervalFavorites();
   renderChartTypeList();
   renderIndicatorsList();
+  if (typeof renderMaRibbonSettingsPanel === 'function') renderMaRibbonSettingsPanel();
   const ct = CHART_TYPES.find(x => x.id === state.chartType);
   if (ct) chartTypeLabel.textContent = t(ct.i18nKey);
   if (dropdownDropdownOpen()) renderDropdownList(searchInput.value || '');
@@ -924,8 +1059,6 @@ function setLanguage(lang) {
 // ---------- 인터벌 정의 ----------
 // native  : Hyperliquid candle API가 그대로 지원
 // agg     : 더 작은 native 캔들(base)을 클라이언트에서 합쳐서 만듦 (예: 2m = 1m x2)
-// tick    : 하이퍼리퀴드가 초단위 캔들을 지원하지 않으므로, 체결(trade) 데이터를 직접 버킷팅해서 만듦
-//           -> 과거 데이터는 recentTrades로 가져올 수 있는 만큼만 (보통 최근 수백 건) 제공됨
 const INTERVAL_META = {
   '1m':  { kind: 'native' },
   '2m':  { kind: 'agg', base: '1m', ms: 120000 },
@@ -981,7 +1114,7 @@ let state = {
   chart: null,
   lastCandle: null,
   prevDayClose: null,
-  liveAgg: null,         // agg/tick 인터벌에서 현재 형성 중인 봉
+  liveAgg: null,         // agg 인터벌에서 현재 형성 중인 봉
   gapTimer: null,        // 체결이 뜸할 때 flat 봉으로 이어붙이는 타이머
   currentBars: [],       // 현재 차트에 로드된 전체 캔들 (뒤로 스크롤 시 앞에 이어붙임)
   loadingMore: false,
@@ -1002,6 +1135,18 @@ let state = {
   bbLineVisible: { basis: true, upper: true, lower: true },
   bbColors: { basis: '#2962FF', upper: '#F23645', lower: '#089981' },
   bbSeries: null,
+  maRibbonOn: false,      // MA Ribbon 지표 on/off
+  maRibbonHidden: false,  // 범례 눈 아이콘으로 임시 숨김
+  // Pine 스크립트의 MA #1~#4 입력값과 동일한 기본값. 키는 각 라인의 고유 id(문자열)이고,
+  // "+ Add Line"으로 라인을 더 추가하면 maRibbonNextId를 이용해 새 id를 계속 발급한다.
+  maRibbonSettings: {
+    1: { show: true, type: 'SMA', source: 'close', length: 20,  color: '#f6c309' },
+    2: { show: true, type: 'SMA', source: 'close', length: 50,  color: '#fb9800' },
+    3: { show: true, type: 'SMA', source: 'close', length: 100, color: '#fb6500' },
+    4: { show: true, type: 'SMA', source: 'close', length: 200, color: '#f60c0c' },
+  },
+  maRibbonNextId: 5,
+  maRibbonSeries: null,   // { [id]: series } 라인 시리즈들
   rsiOn: false,          // RSI 지표 on/off (하단 별도 패널)
   rsiHidden: false,      // 범례 눈 아이콘으로 임시 숨김
   rsiSettings: { length: 14, source: 'close', maType: 'SMA', maLength: 14, bbMult: 2.0 },
@@ -1012,6 +1157,13 @@ let state = {
   rsiCalc: null,         // 라이브 틱마다 전체 재계산(setData) 대신 증분 갱신(update)하기 위한 캐시 상태
   rsiBandSettings: { upperOn: true, upperValue: 70, middleOn: true, middleValue: 50, lowerOn: true, lowerValue: 30 },
   rsiBands: null,        // { upper, middle, lower } - 생성된 IPriceLine 참조 (꺼져있으면 null)
+  macdOn: false,          // MACD 지표 on/off (하단 별도 패널)
+  macdHidden: false,      // 범례 눈 아이콘으로 임시 숨김
+  macdSettings: { source: 'close', fastLen: 12, slowLen: 26, sigLen: 9, oscType: 'EMA', sigType: 'EMA' },
+  macdLineVisible: { macd: true, signal: true, hist: true },
+  macdColors: { macd: '#2962FF', signal: '#ff6d00' },
+  macdChart: null,
+  macdSeries: null,       // { macd, signal, hist }
   emaSeries: null,      // { max, min, avg, avg2 } 라인 시리즈들
   emaCalc: null,        // 실시간 갱신용 { anchor, current, lastTime }
   favoritePrices: {},    // { coin: 최근 1분봉 종가 } — 메인 차트와 동일하게 candle 구독의 종가를 사용
@@ -1615,7 +1767,7 @@ function volPoint(bar){
   };
 }
 
-// ---------- agg(합성 분봉) / tick(체결 기반 초봉) 빌더 ----------
+// ---------- agg(합성 분봉) 빌더 ----------
 // 체결이 없던 구간은 빈칸으로 남기지 않고, 직전 종가로 이어진 얇은(flat) 봉으로 채워서
 // "접속한 시점부터만 보이는" 것처럼 보이는 문제를 줄인다.
 function fillGaps(bars, bucketSec){
@@ -1683,7 +1835,9 @@ function pushOrUpdateBar(bar){
   else arr.push(bar);
   updateEmaBandLive(bar);
   updateBBLive();
+  updateMaRibbonLive();
   updateRsiLive(bar);
+  updateMacdLive();
 }
 
 function updateSeriesWithCandle(c) {
@@ -1694,7 +1848,7 @@ function updateSeriesWithCandle(c) {
   } else if (state.chartType === 'VolumeCandle1') {
     state.candleSeries.update(c); // 투명 시리즈지만 오토스케일/좌표 변환용으로 계속 갱신
     drawVolumeCandles1();
-  } else if (state.chartType === 'Line' || state.chartType === 'Area') {
+  } else if (state.chartType === 'Line' || state.chartType === 'Area' || state.chartType === 'Baseline') {
     state.candleSeries.update({ time: c.time, value: c.close });
   } else {
     state.candleSeries.update(c);
@@ -1712,45 +1866,6 @@ function ingestAggCandle(c, ms){
     if(!state.liveAgg._sub) state.liveAgg._sub = {};
     state.liveAgg._sub[c.time] = c.volume || 0;
     state.liveAgg.volume = Object.values(state.liveAgg._sub).reduce((a, b) => a + b, 0);
-  }
-  updateSeriesWithCandle(state.liveAgg);
-  state.volumeSeries.update(volPoint(state.liveAgg));
-  state.lastCandle = state.liveAgg;
-  pushOrUpdateBar(state.liveAgg);
-  updatePriceBar(state.liveAgg, state.prevDayClose);
-}
-function buildTickCandles(trades, ms){
-  const sorted = [...trades].sort((a, b) => a.time - b.time);
-  const bars = [];
-  let cur = null;
-  sorted.forEach(t => {
-    const bucketSec = Math.floor(t.time / ms) * (ms / 1000);
-    const price = parseFloat(t.px);
-    const sz = parseFloat(t.sz || 0);
-    if(!cur || cur.time !== bucketSec){
-      if(cur) bars.push(cur);
-      cur = { time: bucketSec, open: price, high: price, low: price, close: price, volume: sz };
-    }else{
-      cur.high = Math.max(cur.high, price);
-      cur.low = Math.min(cur.low, price);
-      cur.close = price;
-      cur.volume += sz;
-    }
-  });
-  if(cur) bars.push(cur);
-  return bars;
-}
-function ingestTick(t, ms){
-  const bucketSec = Math.floor(t.time / ms) * (ms / 1000);
-  const price = parseFloat(t.px);
-  const sz = parseFloat(t.sz || 0);
-  if(!state.liveAgg || state.liveAgg.time !== bucketSec){
-    state.liveAgg = { time: bucketSec, open: price, high: price, low: price, close: price, volume: sz };
-  }else{
-    state.liveAgg.high = Math.max(state.liveAgg.high, price);
-    state.liveAgg.low = Math.min(state.liveAgg.low, price);
-    state.liveAgg.close = price;
-    state.liveAgg.volume += sz;
   }
   updateSeriesWithCandle(state.liveAgg);
   state.volumeSeries.update(volPoint(state.liveAgg));
@@ -1960,12 +2075,8 @@ function connectWsGeneric(coin, interval){
   state.ws = ws;
 
   ws.onopen = () => {
-    if(meta.kind === 'tick'){
-      ws.send(JSON.stringify({ method: 'subscribe', subscription: { type: 'trades', coin } }));
-    }else{
-      const wsInterval = meta.kind === 'agg' ? meta.base : interval;
-      ws.send(JSON.stringify({ method: 'subscribe', subscription: { type: 'candle', coin, interval: wsInterval } }));
-    }
+    const wsInterval = meta.kind === 'agg' ? meta.base : interval;
+    ws.send(JSON.stringify({ method: 'subscribe', subscription: { type: 'candle', coin, interval: wsInterval } }));
     setStatus('statusLive', 'live');
   };
 
@@ -1973,22 +2084,17 @@ function connectWsGeneric(coin, interval){
     if(state.ws !== ws) return; // 이미 다른 페어/인터벌로 전환되어 이 연결은 더 이상 유효하지 않음 (지연 도착 메시지 무시)
     let msg;
     try{ msg = JSON.parse(ev.data); }catch(e){ return; }
-    if(meta.kind === 'tick'){
-      if(msg.channel !== 'trades' || !Array.isArray(msg.data)) return;
-      msg.data.forEach(t => ingestTick(t, meta.ms));
+    if(msg.channel !== 'candle' || !msg.data) return;
+    const c = toChartCandle(msg.data);
+    if(meta.kind === 'agg'){
+      ingestAggCandle(c, meta.ms);
     }else{
-      if(msg.channel !== 'candle' || !msg.data) return;
-      const c = toChartCandle(msg.data);
-      if(meta.kind === 'agg'){
-        ingestAggCandle(c, meta.ms);
-      }else{
-        const safeC = normalizeLiveBar(c);
-        updateSeriesWithCandle(safeC);
-        state.volumeSeries.update(volPoint(safeC));
-        state.lastCandle = safeC;
-        pushOrUpdateBar(safeC);
-        updatePriceBar(safeC, state.prevDayClose);
-      }
+      const safeC = normalizeLiveBar(c);
+      updateSeriesWithCandle(safeC);
+      state.volumeSeries.update(volPoint(safeC));
+      state.lastCandle = safeC;
+      pushOrUpdateBar(safeC);
+      updatePriceBar(safeC, state.prevDayClose);
     }
   };
 
@@ -2264,6 +2370,83 @@ function refreshBBFull(){
 function updateBBLive(){
   if(!state.bbOn) return;
   refreshBBFull();
+}
+
+// ---------- MA Ribbon 지표 (Pine: Moving Average Ribbon) ----------
+// 서로 독립적인 이동평균선들을 메인 차트 위에 겹쳐 그린다 (overlay=true). 기본은 4개(Pine 원본과 동일)지만
+// 설정창의 "+ Add Line"으로 원하는 만큼 라인을 더 추가하거나, 각 라인의 휴지통 아이콘으로 개별 삭제할 수 있다.
+// 라인마다 종류(SMA/EMA/SMMA/WMA/VWMA)/소스/길이/색상/표시여부를 개별로 가진다.
+function maRibbonLineIds(){
+  // 숫자 id 기준으로 정렬해서 항상 같은 순서로 표시 (라인을 추가/삭제해도 순서가 안 흔들리게)
+  return Object.keys(state.maRibbonSettings).sort((a, b) => Number(a) - Number(b));
+}
+// 시리즈가 없는 라인(새로 추가된 라인 포함)만 만들어서 채워넣는다. 이미 있는 시리즈는 건드리지 않는다.
+function ensureMaRibbonSeries(){
+  if(!state.chart) return;
+  if(!state.maRibbonSeries) state.maRibbonSeries = {};
+  maRibbonLineIds().forEach(id => {
+    if(state.maRibbonSeries[id]) return;
+    const cfg = state.maRibbonSettings[id];
+    state.maRibbonSeries[id] = state.chart.addLineSeries({
+      color: cfg.color, lineWidth: 2, priceScaleId: 'right',
+      lastValueVisible: true, priceLineVisible: false, crosshairMarkerVisible: false,
+      visible: !state.maRibbonHidden && cfg.show,
+      autoscaleInfoProvider: () => null,
+    });
+  });
+}
+function removeMaRibbonSeries(){
+  if(!state.chart || !state.maRibbonSeries) return;
+  Object.values(state.maRibbonSeries).forEach(s => state.chart.removeSeries(s));
+  state.maRibbonSeries = null;
+}
+// 라인 하나만 콕 집어 지운다 (시리즈 + 설정 둘 다). 마지막 남은 라인이어도 지울 수 있다.
+function removeMaRibbonLine(id){
+  if(state.maRibbonSeries && state.maRibbonSeries[id]){
+    state.chart.removeSeries(state.maRibbonSeries[id]);
+    delete state.maRibbonSeries[id];
+  }
+  delete state.maRibbonSettings[id];
+  renderMaRibbonSettingsPanel();
+}
+// 팔레트를 순환하면서 새 라인에 매번 다른 기본 색을 준다 (다 같은 색으로 겹쳐 보이지 않도록)
+const MA_RIBBON_PALETTE = ['#4fd1c5', '#63b3ed', '#b794f4', '#f687b3', '#68d391', '#fbd38d', '#fc8181', '#81e6d9'];
+function addMaRibbonLine(){
+  const id = String(state.maRibbonNextId++);
+  const color = MA_RIBBON_PALETTE[(Number(id) - 5) % MA_RIBBON_PALETTE.length];
+  state.maRibbonSettings[id] = { show: true, type: 'SMA', source: 'close', length: 20, color };
+  renderMaRibbonSettingsPanel();
+  if(state.maRibbonOn){
+    ensureMaRibbonSeries();
+    refreshMaRibbonFull();
+  }
+}
+function applyMaRibbonVisibility(){
+  if(!state.maRibbonSeries) return;
+  maRibbonLineIds().forEach(id => {
+    if(!state.maRibbonSeries[id]) return;
+    state.maRibbonSeries[id].applyOptions({ visible: !state.maRibbonHidden && state.maRibbonSettings[id].show });
+  });
+}
+// BB와 마찬가지로 봉 수가 많지 않아 라이브 갱신도 그냥 전체 재계산한다 (충분히 빠름).
+function refreshMaRibbonFull(){
+  if(!state.maRibbonOn) return;
+  ensureMaRibbonSeries();
+  const bars = state.currentBars;
+  maRibbonLineIds().forEach(id => {
+    const series = state.maRibbonSeries[id];
+    if(!series) return;
+    if(!bars.length){ series.setData([]); return; }
+    const cfg = state.maRibbonSettings[id];
+    const arr = computeMASeries(bars, cfg.length, cfg.type, cfg.source);
+    const pts = [];
+    for(let i = 0; i < bars.length; i++){ if(arr[i] != null) pts.push({ time: bars[i].time, value: arr[i] }); }
+    series.setData(pts);
+  });
+}
+function updateMaRibbonLive(){
+  if(!state.maRibbonOn) return;
+  refreshMaRibbonFull();
 }
 
 // ---------- RSI 지표 (Pine: Relative Strength Index) ----------
@@ -2741,6 +2924,191 @@ function applyRsiVisibility(){
   }
 }
 
+// ---------- MACD 지표 (Pine: Moving Average Convergence Divergence) ----------
+// RSI처럼 0~100 같은 고정 범위가 없어서(위아래로 얼마든지 움직일 수 있음), 오토스케일을 그냥 켜둔다.
+// BB와 마찬가지로 봉 수가 많지 않으면 매번 전체 재계산해도 충분히 빠르다(라이브 갱신도 동일 패턴).
+const macdChartEl = document.getElementById('macdChart');
+const macdPaneEl = document.getElementById('macdPane');
+let macdSyncGuard = false;
+function macdFollowMain(range){
+  if(macdSyncGuard || !range || !state.macdChart) return;
+  macdSyncGuard = true;
+  state.macdChart.timeScale().setVisibleLogicalRange(range);
+  macdSyncGuard = false;
+}
+function mainFollowMacd(range){
+  if(macdSyncGuard || !range || !state.chart) return;
+  macdSyncGuard = true;
+  state.chart.timeScale().setVisibleLogicalRange(range);
+  macdSyncGuard = false;
+}
+new ResizeObserver(entries => {
+  if(!state.macdChart) return;
+  const { width, height } = entries[0].contentRect;
+  state.macdChart.resize(width, height);
+}).observe(macdChartEl);
+
+// ---------- MACD 패널 높이 드래그로 조절 (RSI 패널과 동일한 방식) ----------
+(function setupMacdResize(){
+  const handle = document.getElementById('macdResizeHandle');
+  const chartAreaEl = document.getElementById('chartArea');
+  let dragging = false, startY = 0, startHeight = 0;
+
+  function clampHeight(h){
+    const areaH = chartAreaEl.clientHeight;
+    const minH = 80;
+    const maxH = Math.max(minH, areaH - 200);
+    return Math.min(maxH, Math.max(minH, h));
+  }
+  function pointY(e){ return e.touches ? e.touches[0].clientY : e.clientY; }
+  function onMove(e){
+    if(!dragging) return;
+    const delta = pointY(e) - startY;
+    macdPaneEl.style.height = clampHeight(startHeight - delta) + 'px';
+    e.preventDefault();
+  }
+  function onUp(){
+    if(!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+    window.removeEventListener('touchmove', onMove);
+    window.removeEventListener('touchend', onUp);
+  }
+  function onDown(e){
+    dragging = true;
+    startY = pointY(e);
+    startHeight = macdPaneEl.getBoundingClientRect().height;
+    handle.classList.add('dragging');
+    document.body.style.cursor = 'ns-resize';
+    document.body.style.userSelect = 'none';
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onUp);
+    e.preventDefault();
+  }
+  handle.addEventListener('mousedown', onDown);
+  handle.addEventListener('touchstart', onDown, { passive: false });
+})();
+
+function createMacdChart(){
+  if(state.macdChart) return;
+  state.macdChart = LightweightCharts.createChart(macdChartEl, {
+    layout: {
+      background: { color: '#0a0d12' },
+      textColor: '#6b7686',
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 11,
+    },
+    grid: { vertLines: { color: '#151a22' }, horzLines: { color: '#151a22' } },
+    rightPriceScale: { borderColor: '#212833', visible: true, autoScale: true, mode: LightweightCharts.PriceScaleMode.Normal },
+    leftPriceScale: { visible: false },
+    timeScale: { borderColor: '#212833', timeVisible: true, secondsVisible: true },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+    handleScroll: { vertTouchDrag: true, mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true },
+    handleScale: { axisPressedMouseMove: { time: true, price: true }, mouseWheel: true, pinch: true },
+  });
+  state.macdChart.priceScale('right').applyOptions({ scaleMargins: { top: 0.15, bottom: 0.15 } });
+  state.macdSeries = {
+    hist: state.macdChart.addHistogramSeries({
+      priceScaleId: 'right', priceLineVisible: false, lastValueVisible: false,
+      visible: !state.macdHidden && state.macdLineVisible.hist,
+    }),
+    macd: state.macdChart.addLineSeries({
+      color: state.macdColors.macd, lineWidth: 2, priceScaleId: 'right',
+      lastValueVisible: true, priceLineVisible: false, crosshairMarkerVisible: false,
+      visible: !state.macdHidden && state.macdLineVisible.macd,
+    }),
+    signal: state.macdChart.addLineSeries({
+      color: state.macdColors.signal, lineWidth: 2, priceScaleId: 'right',
+      lastValueVisible: true, priceLineVisible: false, crosshairMarkerVisible: false,
+      visible: !state.macdHidden && state.macdLineVisible.signal,
+    }),
+  };
+  // Pine의 hline(0, "Zero", #787b8680)에 해당하는 0 기준선
+  state.macdSeries.macd.createPriceLine({
+    price: 0, color: 'rgba(120,123,134,0.5)', lineWidth: 1,
+    lineStyle: LightweightCharts.LineStyle.Solid, axisLabelVisible: false, title: '',
+  });
+  state.chart.timeScale().subscribeVisibleLogicalRangeChange(macdFollowMain);
+  state.macdChart.timeScale().subscribeVisibleLogicalRangeChange(mainFollowMacd);
+  const initRange = state.chart.timeScale().getVisibleLogicalRange();
+  if(initRange) state.macdChart.timeScale().setVisibleLogicalRange(initRange);
+}
+function destroyMacdChart(){
+  if(!state.macdChart) return;
+  if(state.chart) state.chart.timeScale().unsubscribeVisibleLogicalRangeChange(macdFollowMain);
+  state.macdChart.timeScale().unsubscribeVisibleLogicalRangeChange(mainFollowMacd);
+  state.macdChart.remove();
+  state.macdChart = null;
+  state.macdSeries = null;
+}
+function applyMacdVisibility(){
+  if(!state.macdSeries) return;
+  state.macdSeries.macd.applyOptions({ visible: !state.macdHidden && state.macdLineVisible.macd });
+  state.macdSeries.signal.applyOptions({ visible: !state.macdHidden && state.macdLineVisible.signal });
+  state.macdSeries.hist.applyOptions({ visible: !state.macdHidden && state.macdLineVisible.hist });
+}
+// bars 전체로 MACD/Signal/Histogram 배열을 계산. fast/slow MA는 이미 있는 computeMASeries(바 기반)를,
+// 시그널선(=macd 값 자체의 이동평균)은 computeMAFromValues(값 배열 기반)를 그대로 재사용한다.
+function computeMACD(bars, source, fastLen, slowLen, sigLen, oscType, sigType){
+  const n = bars.length;
+  const fastArr = computeMASeries(bars, fastLen, oscType, source);
+  const slowArr = computeMASeries(bars, slowLen, oscType, source);
+  const macdArr = new Array(n).fill(null);
+  for(let i = 0; i < n; i++){
+    if(fastArr[i] != null && slowArr[i] != null) macdArr[i] = fastArr[i] - slowArr[i];
+  }
+  const volumes = bars.map(b => b.volume || 0); // sigType은 EMA/SMA만 쓰지만 함수 시그니처상 필요
+  const signalArr = computeMAFromValues(macdArr, volumes, sigLen, sigType);
+  const histArr = new Array(n).fill(null);
+  for(let i = 0; i < n; i++){
+    if(macdArr[i] != null && signalArr[i] != null) histArr[i] = macdArr[i] - signalArr[i];
+  }
+  return { macdArr, signalArr, histArr };
+}
+// 히스토그램 막대 색: 0 이상이면서 커지는 중 = 진한 청록, 0 이상이면서 줄어드는 중 = 연한 청록,
+// 0 미만이면서 커지는 중(0에 가까워짐) = 연한 빨강, 0 미만이면서 더 줄어드는 중 = 진한 빨강.
+function macdHistColor(hist, prevHist){
+  const rising = prevHist == null ? true : hist > prevHist;
+  if(hist >= 0) return rising ? '#26a69a' : '#b2dfdb';
+  return rising ? '#ffcdd2' : '#ff5252';
+}
+function refreshMacdFull(){
+  if(!state.macdOn) return;
+  if(!state.macdChart) createMacdChart();
+  const bars = state.currentBars;
+  if(!bars.length){
+    state.macdSeries.macd.setData([]);
+    state.macdSeries.signal.setData([]);
+    state.macdSeries.hist.setData([]);
+    return;
+  }
+  const { source, fastLen, slowLen, sigLen, oscType, sigType } = state.macdSettings;
+  const { macdArr, signalArr, histArr } = computeMACD(bars, source, fastLen, slowLen, sigLen, oscType, sigType);
+  const macdPts = [], signalPts = [], histPts = [];
+  let prevHist = null;
+  for(let i = 0; i < bars.length; i++){
+    if(macdArr[i] != null) macdPts.push({ time: bars[i].time, value: macdArr[i] });
+    if(signalArr[i] != null) signalPts.push({ time: bars[i].time, value: signalArr[i] });
+    if(histArr[i] != null){
+      histPts.push({ time: bars[i].time, value: histArr[i], color: macdHistColor(histArr[i], prevHist) });
+      prevHist = histArr[i];
+    }
+  }
+  state.macdSeries.macd.setData(macdPts);
+  state.macdSeries.signal.setData(signalPts);
+  state.macdSeries.hist.setData(histPts);
+}
+function updateMacdLive(){
+  if(!state.macdOn) return;
+  refreshMacdFull();
+}
+
 function setEmaBandOn(on){
   state.emaBandOn = on;
   if(on){
@@ -2761,6 +3129,16 @@ function setBBOn(on){
   renderBBLegend();
   renderIndicatorsList();
 }
+function setMaRibbonOn(on){
+  state.maRibbonOn = on;
+  if(on){
+    refreshMaRibbonFull();
+  }else{
+    removeMaRibbonSeries();
+  }
+  renderMaRibbonLegend();
+  renderIndicatorsList();
+}
 function setRsiOn(on){
   state.rsiOn = on;
   if(on){
@@ -2774,6 +3152,21 @@ function setRsiOn(on){
     destroyRsiChart();
   }
   renderRsiLegend();
+  renderIndicatorsList();
+}
+function setMacdOn(on){
+  state.macdOn = on;
+  if(on){
+    macdPaneEl.style.display = 'block';
+    refreshMacdFull(); // 내부에서 필요하면 createMacdChart() 호출
+    requestAnimationFrame(() => {
+      if(state.macdChart) state.macdChart.resize(macdChartEl.clientWidth, macdChartEl.clientHeight);
+    });
+  }else{
+    macdPaneEl.style.display = 'none';
+    destroyMacdChart();
+  }
+  renderMacdLegend();
   renderIndicatorsList();
 }
 
@@ -2793,10 +3186,22 @@ const INDICATORS = [
     toggle: () => setBBOn(!state.bbOn),
   },
   {
+    id: 'maRibbon',
+    labelKey: 'maRibbonLabel',
+    isOn: () => state.maRibbonOn,
+    toggle: () => setMaRibbonOn(!state.maRibbonOn),
+  },
+  {
     id: 'rsi',
     labelKey: 'rsiLabel',
     isOn: () => state.rsiOn,
     toggle: () => setRsiOn(!state.rsiOn),
+  },
+  {
+    id: 'macd',
+    labelKey: 'macdLabel',
+    isOn: () => state.macdOn,
+    toggle: () => setMacdOn(!state.macdOn),
   },
 ];
 
@@ -2975,6 +3380,121 @@ BB_LEGEND_LINES.forEach(({ key, checkbox, color }) => {
   });
 });
 
+// ---------- MA Ribbon 범례 ----------
+const legendMaRibbon = document.getElementById('legendMaRibbon');
+const legendMaRibbonEyeBtn = document.getElementById('legendMaRibbonEyeBtn');
+const legendMaRibbonGearBtn = document.getElementById('legendMaRibbonGearBtn');
+const legendMaRibbonTrashBtn = document.getElementById('legendMaRibbonTrashBtn');
+const legendMaRibbonSettings = document.getElementById('legendMaRibbonSettings');
+registerLegendSettings(legendMaRibbonSettings);
+
+function renderMaRibbonLegend(){
+  legendMaRibbon.style.display = state.maRibbonOn ? 'flex' : 'none';
+  legendMaRibbon.classList.toggle('hidden', state.maRibbonHidden);
+  legendMaRibbonEyeBtn.classList.toggle('active', !state.maRibbonHidden);
+  if(!state.maRibbonOn) closeLegendSettings(legendMaRibbonSettings);
+}
+
+legendMaRibbonEyeBtn.onclick = (e) => {
+  e.stopPropagation();
+  state.maRibbonHidden = !state.maRibbonHidden;
+  applyMaRibbonVisibility();
+  renderMaRibbonLegend();
+};
+legendMaRibbonGearBtn.onclick = (e) => {
+  e.stopPropagation();
+  toggleLegendSettings(legendMaRibbonSettings);
+};
+legendMaRibbonTrashBtn.onclick = (e) => {
+  e.stopPropagation();
+  closeLegendSettings(legendMaRibbonSettings);
+  setMaRibbonOn(false);
+};
+document.addEventListener('click', (e) => {
+  if(legendMaRibbonSettings.classList.contains('open') && !legendMaRibbonSettings.contains(e.target) && e.target !== legendMaRibbonGearBtn){
+    closeLegendSettings(legendMaRibbonSettings);
+  }
+});
+
+// 라인 개수가 늘었다 줄었다 하므로 고정 id로 addEventListener를 걸 수 없다.
+// 컨테이너에 innerHTML로 통째로 다시 그리고, 이벤트는 컨테이너에 한 번만(위임) 건다.
+const maRibbonLinesContainer = document.getElementById('maRibbonLinesContainer');
+const MA_RIBBON_TYPE_OPTIONS = ['SMA', 'EMA', 'SMMA (RMA)', 'WMA', 'VWMA'];
+const MA_RIBBON_SOURCE_OPTIONS = ['close', 'open', 'high', 'low', 'hl2', 'hlc3', 'ohlc4'];
+function renderMaRibbonSettingsPanel(){
+  const ids = maRibbonLineIds();
+  maRibbonLinesContainer.innerHTML = ids.map((id, idx) => {
+    const cfg = state.maRibbonSettings[id];
+    const typeOpts = MA_RIBBON_TYPE_OPTIONS.map(o => `<option value="${o}"${cfg.type === o ? ' selected' : ''}>${o}</option>`).join('');
+    const srcOpts = MA_RIBBON_SOURCE_OPTIONS.map(o => `<option value="${o}"${cfg.source === o ? ' selected' : ''}>${o}</option>`).join('');
+    return `
+      ${idx > 0 ? '<div class="legend-settings-divider"></div>' : ''}
+      <div class="legend-settings-row">
+        <div class="ma-ribbon-line-head">
+          <label><input type="checkbox" data-role="show" data-id="${id}"${cfg.show ? ' checked' : ''}><span>MA #${id}</span></label>
+          <input type="color" class="legend-color-dot" data-role="color" data-id="${id}" value="${cfg.color}">
+          <button type="button" class="ma-ribbon-remove-btn" data-role="remove" data-id="${id}" title="${t('legendRemove')}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="legend-settings-row field">
+        <span class="field-label">${t('maRibbonType')}</span>
+        <select class="legend-select" data-role="type" data-id="${id}">${typeOpts}</select>
+      </div>
+      <div class="legend-settings-row field">
+        <span class="field-label">${t('maRibbonSource')}</span>
+        <select class="legend-select" data-role="source" data-id="${id}">${srcOpts}</select>
+      </div>
+      <div class="legend-settings-row field">
+        <span class="field-label">${t('maRibbonLength')}</span>
+        <input type="number" class="legend-number" data-role="length" data-id="${id}" min="1" step="1" value="${cfg.length}">
+      </div>
+    `;
+  }).join('');
+}
+maRibbonLinesContainer.addEventListener('change', (e) => {
+  const el = e.target;
+  const { role, id } = el.dataset;
+  const cfg = role && id ? state.maRibbonSettings[id] : null;
+  if(!cfg) return;
+  if(role === 'show'){
+    cfg.show = el.checked;
+    applyMaRibbonVisibility();
+  }else if(role === 'type'){
+    cfg.type = el.value;
+    refreshMaRibbonFull();
+  }else if(role === 'source'){
+    cfg.source = el.value;
+    refreshMaRibbonFull();
+  }else if(role === 'length'){
+    const v = Math.max(1, Math.round(parseFloat(el.value)) || cfg.length);
+    cfg.length = v;
+    el.value = v;
+    refreshMaRibbonFull();
+  }
+});
+maRibbonLinesContainer.addEventListener('input', (e) => {
+  const el = e.target;
+  const { role, id } = el.dataset;
+  if(role !== 'color' || !id) return;
+  const cfg = state.maRibbonSettings[id];
+  if(!cfg) return;
+  cfg.color = el.value;
+  if(state.maRibbonSeries && state.maRibbonSeries[id]) state.maRibbonSeries[id].applyOptions({ color: el.value });
+});
+maRibbonLinesContainer.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-role="remove"]');
+  if(!btn) return;
+  e.stopPropagation();
+  removeMaRibbonLine(btn.dataset.id);
+});
+document.getElementById('maRibbonAddLineBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  addMaRibbonLine();
+});
+renderMaRibbonSettingsPanel(); // 기본 4개 라인으로 초기 렌더
+
 // ---------- RSI 범례 ----------
 const legendRSI = document.getElementById('legendRSI');
 const legendRSIEyeBtn = document.getElementById('legendRSIEyeBtn');
@@ -3085,12 +3605,97 @@ document.getElementById('rsiLowerValue').addEventListener('change', (e) => {
   applyRsiBands();
 });
 
+// ---------- MACD 범례 ----------
+const legendMACD = document.getElementById('legendMACD');
+const legendMACDEyeBtn = document.getElementById('legendMACDEyeBtn');
+const legendMACDGearBtn = document.getElementById('legendMACDGearBtn');
+const legendMACDTrashBtn = document.getElementById('legendMACDTrashBtn');
+const legendMACDSettings = document.getElementById('legendMACDSettings');
+registerLegendSettings(legendMACDSettings);
+
+function renderMacdLegend(){
+  legendMACD.style.display = state.macdOn ? 'flex' : 'none';
+  legendMACD.classList.toggle('hidden', state.macdHidden);
+  legendMACDEyeBtn.classList.toggle('active', !state.macdHidden);
+  if(!state.macdOn) closeLegendSettings(legendMACDSettings);
+}
+
+legendMACDEyeBtn.onclick = (e) => {
+  e.stopPropagation();
+  state.macdHidden = !state.macdHidden;
+  applyMacdVisibility();
+  renderMacdLegend();
+};
+legendMACDGearBtn.onclick = (e) => {
+  e.stopPropagation();
+  toggleLegendSettings(legendMACDSettings);
+};
+legendMACDTrashBtn.onclick = (e) => {
+  e.stopPropagation();
+  closeLegendSettings(legendMACDSettings);
+  setMacdOn(false);
+};
+document.addEventListener('click', (e) => {
+  if(legendMACDSettings.classList.contains('open') && !legendMACDSettings.contains(e.target) && e.target !== legendMACDGearBtn){
+    closeLegendSettings(legendMACDSettings);
+  }
+});
+
+document.getElementById('macdSource').addEventListener('change', (e) => {
+  state.macdSettings.source = e.target.value;
+  refreshMacdFull();
+});
+document.getElementById('macdFastLen').addEventListener('change', (e) => {
+  const v = Math.max(1, Math.round(parseFloat(e.target.value)) || 12);
+  state.macdSettings.fastLen = v;
+  e.target.value = v;
+  refreshMacdFull();
+});
+document.getElementById('macdSlowLen').addEventListener('change', (e) => {
+  const v = Math.max(1, Math.round(parseFloat(e.target.value)) || 26);
+  state.macdSettings.slowLen = v;
+  e.target.value = v;
+  refreshMacdFull();
+});
+document.getElementById('macdSigLen').addEventListener('change', (e) => {
+  const v = Math.max(1, Math.round(parseFloat(e.target.value)) || 9);
+  state.macdSettings.sigLen = v;
+  e.target.value = v;
+  refreshMacdFull();
+});
+document.getElementById('macdOscType').addEventListener('change', (e) => {
+  state.macdSettings.oscType = e.target.value;
+  refreshMacdFull();
+});
+document.getElementById('macdSigType').addEventListener('change', (e) => {
+  state.macdSettings.sigType = e.target.value;
+  refreshMacdFull();
+});
+document.getElementById('macdShowMacd').addEventListener('change', (e) => {
+  state.macdLineVisible.macd = e.target.checked;
+  applyMacdVisibility();
+});
+document.getElementById('macdColorMacd').addEventListener('input', (e) => {
+  state.macdColors.macd = e.target.value;
+  if(state.macdSeries) state.macdSeries.macd.applyOptions({ color: e.target.value });
+});
+document.getElementById('macdShowSignal').addEventListener('change', (e) => {
+  state.macdLineVisible.signal = e.target.checked;
+  applyMacdVisibility();
+});
+document.getElementById('macdColorSignal').addEventListener('input', (e) => {
+  state.macdColors.signal = e.target.value;
+  if(state.macdSeries) state.macdSeries.signal.applyOptions({ color: e.target.value });
+});
+document.getElementById('macdShowHist').addEventListener('change', (e) => {
+  state.macdLineVisible.hist = e.target.checked;
+  applyMacdVisibility();
+});
+
 // ---------- 뒤로 스크롤하면 과거 데이터를 이어서 불러오기 ----------
-// tick(초단위) 인터벌은 recentTrades가 "최근 N건"만 주기 때문에 더 불러올 방법이 없음
 async function loadMoreHistory(){
   if(state.loadingMore || state.noMoreHistory || !state.coin || !state.currentBars.length) return;
   const meta = INTERVAL_META[state.interval];
-  if(meta.kind === 'tick') return;
 
   state.loadingMore = true;
   try{
@@ -3116,7 +3721,9 @@ async function loadMoreHistory(){
     state.volumeSeries.setData(state.currentBars.map(volPoint));
     refreshEmaBandFull();
     refreshBBFull();
+    refreshMaRibbonFull();
     refreshRsiFull();
+    refreshMacdFull();
     if(range){
       state.chart.timeScale().setVisibleLogicalRange({
         from: range.from + olderBars.length,
@@ -3168,10 +3775,7 @@ async function selectPair(pair){
   setStatus('statusLoadingHistory');
   try{
     let bars;
-    if(meta.kind === 'tick'){
-      const trades = await info({ type: 'recentTrades', coin: pair.coin });
-      bars = fillGaps(buildTickCandles(trades, meta.ms), meta.ms / 1000);
-    }else if(meta.kind === 'agg'){
+    if(meta.kind === 'agg'){
       const history = await fetchHistory(pair.coin, meta.base);
       bars = fillGaps(buildAggCandles(history.map(toChartCandle), meta.ms), meta.ms / 1000);
     }else{
@@ -3206,8 +3810,10 @@ async function selectPair(pair){
     recreateMainSeries();
     refreshEmaBandFull();
     refreshBBFull();
+    refreshMaRibbonFull();
     refreshRsiFull();
-    state.noMoreHistory = meta.kind === 'tick'; // recentTrades는 시간 범위 조회가 없어 페이지네이션 불가
+    refreshMacdFull();
+    state.noMoreHistory = false;
     if(bars.length){
       state.lastCandle = bars[bars.length - 1];
       state.liveAgg = meta.kind !== 'native' ? { ...state.lastCandle } : null;
@@ -3219,6 +3825,10 @@ async function selectPair(pair){
       state.chart.priceScale('right').applyOptions({ autoScale: true });
       state.chart.priceScale('left').applyOptions({ autoScale: true });
       state.chart.timeScale().fitContent();
+      // MACD는 RSI(항상 0~100)와 달리 값의 크기 자체가 자산 가격 규모에 좌우돼서(BTC vs HYPE처럼),
+      // 이전 페어에서 수동으로 조정했거나 맞춰졌던 축 범위를 그대로 두면 새 페어에서 그냥 평평한
+      // 직선처럼 눌려 보인다. 페어를 바꿀 때마다 오토스케일로 리셋해서 항상 새 데이터에 맞게 그린다.
+      if(state.macdChart) state.macdChart.priceScale('right').applyOptions({ autoScale: true });
     }
 
     connectWsGeneric(pair.coin, state.interval);
@@ -3247,6 +3857,7 @@ const CHART_TYPES = [
   { id: 'VolumeCandle2', i18nKey: 'chartVolumeCandle2' },
   { id: 'Bar', i18nKey: 'chartBar' },
   { id: 'Line', i18nKey: 'chartLine' },
+  { id: 'Baseline', i18nKey: 'chartBaseline' },
   { id: 'Area', i18nKey: 'chartArea' },
   { id: 'HeikinAshi', i18nKey: 'chartHeikinAshi' },
 ];
@@ -3377,6 +3988,32 @@ function calculateHeikinAshi(bars) {
   return haBars;
 }
 
+// 트레이딩뷰의 베이스라인은 "특정 가격"이 아니라 "화면 세로 정중앙"에 고정된다 — 스크롤/줌/세로 드래그로
+// 보이는 가격 범위가 바뀌면, 화면 중앙에 있던 가격 자체가 바뀌면서 점선도 그 새 가격으로 다시 그려진다.
+// lightweight-charts에는 "화면 중앙에 자동으로 맞추기" 옵션이 없어서, 매 프레임 직접
+// (패널 픽셀 높이의 정중앙) -> (그 좌표에 해당하는 가격)을 coordinateToPrice로 계산해서 넣어준다.
+// 이렇게 하면 세로 드래그 이동, 가격축 휠 줌처럼 "보이는 시간 범위는 안 바뀌지만 가격 범위는 바뀌는" 경우도
+// 전부 자동으로 커버된다 (반대로 시간축 스크롤/줌은 물론이고).
+let lastBaselineValue = null;
+let baselineCenterLine = null; // Baseline 모드에서 화면 중앙을 표시하는 회색 점선 (createPriceLine 참조)
+function updateBaselineValue(){
+  if (state.chartType !== 'Baseline' || !state.candleSeries || !state.chart) return;
+  const paneHeight = state.chart.paneSize().height;
+  if (!paneHeight) return;
+  const midPrice = state.candleSeries.coordinateToPrice(paneHeight / 2);
+  if (midPrice == null) return;
+  if (lastBaselineValue != null && Math.abs(lastBaselineValue - midPrice) < 1e-9) return;
+  lastBaselineValue = midPrice;
+  state.candleSeries.applyOptions({ baseValue: { type: 'price', price: midPrice } });
+  if (baselineCenterLine) baselineCenterLine.applyOptions({ price: midPrice });
+}
+// 위 이유로 특정 이벤트에만 걸어두면 놓치는 경우가 생겨서(예: 세로 드래그, 가격축 휠 줌),
+// Baseline일 때만 매 프레임 돌아가는 가벼운 루프로 계속 맞춰준다.
+(function baselineSyncLoop(){
+  updateBaselineValue();
+  requestAnimationFrame(baselineSyncLoop);
+})();
+
 function recreateMainSeries() {
   if (!state.chart) return;
 
@@ -3390,9 +4027,11 @@ function recreateMainSeries() {
 
   // 기존 시리즈 제거
   if (state.candleSeries) {
-    state.chart.removeSeries(state.candleSeries);
+    state.chart.removeSeries(state.candleSeries); // 붙어있던 baselineCenterLine 가격선도 같이 제거됨
     state.candleSeries = null;
   }
+  baselineCenterLine = null;
+  lastBaselineValue = null;
   
   const type = state.chartType;
   const commonOptions = {
@@ -3429,6 +4068,28 @@ function recreateMainSeries() {
       color: '#4fd1c5',
       lineWidth: 2,
     });
+  } else if (type === 'Baseline') {
+    // 초기값은 대충 잡아둬도 된다 — 아래 baselineSyncLoop(rAF)가 다음 프레임에 바로
+    // "화면 정중앙에 해당하는 가격"으로 정확히 고쳐준다.
+    const lastClose = state.currentBars.length ? state.currentBars[state.currentBars.length - 1].close : 0;
+    state.candleSeries = state.chart.addBaselineSeries({
+      ...commonOptions,
+      baseValue: { type: 'price', price: lastClose },
+      topLineColor: '#4fd1c5',
+      topFillColor1: 'rgba(79, 209, 197, 0.28)',
+      topFillColor2: 'rgba(79, 209, 197, 0.05)',
+      bottomLineColor: '#ef6f6f',
+      bottomFillColor1: 'rgba(239, 111, 111, 0.05)',
+      bottomFillColor2: 'rgba(239, 111, 111, 0.28)',
+      lineWidth: 2,
+    });
+    // baseValue 자체는 색이 위/아래로 갈리는 기준값일 뿐 화면에 선으로 그려주진 않아서
+    // (lightweight-charts의 baseLineVisible 옵션은 이거와 무관 — percentage/indexedTo100 스케일 전용),
+    // 트레이딩뷰처럼 "여기가 기준"임을 보여주는 회색 점선을 별도 가격선으로 직접 추가한다.
+    baselineCenterLine = state.candleSeries.createPriceLine({
+      price: lastClose, color: '#787B86', lineWidth: 1,
+      lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: false, title: '',
+    });
   } else if (type === 'Area') {
     state.candleSeries = state.chart.addAreaSeries({
       ...commonOptions,
@@ -3447,7 +4108,7 @@ function recreateMainSeries() {
     displayBars = applyVolumeColors(state.currentBars);
   }
   
-  if (type === 'Line' || type === 'Area') {
+  if (type === 'Line' || type === 'Area' || type === 'Baseline') {
     state.candleSeries.setData(displayBars.map(b => ({ time: b.time, value: b.close })));
   } else {
     state.candleSeries.setData(displayBars);

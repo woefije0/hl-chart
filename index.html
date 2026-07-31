@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HL Chart — Hyperliquid Terminal</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="description" content="Free real-time chart terminal for Hyperliquid. Live candles, indicators, EN/KR support.">
 
 <!-- Open Graph / Twitter Card: link preview cards -->
@@ -31,7 +34,7 @@
 <div class="banner" id="netBanner" data-i18n="netBannerDefault"></div>
 
 <div class="topbar">
-  <div class="brand"><span class="mark"></span><b>HL Chart</b><span>v0.5.0</span></div>
+  <div class="brand"><span class="mark"></span><b>HL Chart</b><span>v0.6.0</span></div>
 
   <div class="pairs" id="pairs">
     <button class="allpairs-toggle" id="allpairsToggle">
@@ -89,11 +92,9 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><path d="M3.5 9a8.5 8.5 0 1 1-1 4.5"/><path d="M1 5v4h4"/></svg>
   </button>
 
-  <div class="lang-switch" id="layoutSwitch" data-i18n-title="layoutTitle">
-    <button class="lang-btn active" id="layoutBtn1" data-layout="1">1</button>
-    <button class="lang-btn" id="layoutBtn2" data-layout="2">2</button>
-    <button class="lang-btn" id="layoutBtn4" data-layout="4">4</button>
-  </div>
+  <button class="app-settings-btn" id="fundingToggleBtn" data-i18n-title="fundingToggleTitle" title="Funding Rate History">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+  </button>
 
   <button class="app-settings-btn" id="orderbookToggleBtn" data-i18n-title="orderbookToggleTitle" title="Order Book">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/><path d="M6 8h1M6 12h1M6 16h1M17 8h1M17 12h1M17 16h1"/></svg>
@@ -164,6 +165,12 @@
       <button class="draw-tool-btn" id="drawToolTrash" data-i18n-title="drawToolClearAll" title="Clear all drawings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
       </button>
+      <div class="draw-toolbar-divider"></div>
+      <div class="layout-switch-col" id="layoutSwitch" data-i18n-title="layoutTitle">
+        <button class="draw-tool-btn layout-btn active" id="layoutBtn1" data-layout="1">1</button>
+        <button class="draw-tool-btn layout-btn" id="layoutBtn2" data-layout="2">2</button>
+        <button class="draw-tool-btn layout-btn" id="layoutBtn4" data-layout="4">4</button>
+      </div>
     </div>
     <div class="chart-area-main" id="chartAreaMain">
     <div class="pricebar">
@@ -174,7 +181,7 @@
       <div class="stat">L <b id="statL">—</b></div>
       <div class="stat">C <b id="statC">—</b> <b id="statCPct">—</b></div>
       <div class="stat" id="statLabelWrap" style="opacity:.6"><b id="statLabel">Today</b></div>
-      <div class="stat"><span data-i18n="stat24hVol">24h Volume</span> <b id="statVol">—</b></div>
+      <div class="stat"><span data-i18n="stat24hVol">V(24h)</span> <b id="statVol">—</b></div>
       <div class="stat" id="statOIWrap">OI <b id="statOI">—</b></div>
       <div class="stat" id="statFundingWrap"><span data-i18n="statFunding">Funding (1h)</span> <b id="statFunding">—</b> <span style="opacity:.6"><span data-i18n="statUntilSettle">· until settle</span> <b id="fundingCountdown">--:--</b></span></div>
       <div class="stat"><span data-i18n="statSymbol">Symbol</span> <b id="coinLabel">—</b></div>
@@ -182,6 +189,9 @@
     </div>
 
     <div class="chart-wrap" id="chartWrap">
+      <div class="chart-loading-overlay" id="chartLoadingOverlay" style="display:none">
+        <div class="chart-loading-spinner"></div>
+      </div>
       <div id="chart"></div>
       <div class="volume-axis-label" id="volumeAxisLabel" style="display:none"></div>
       <canvas id="drawOverlay"></canvas>
@@ -588,6 +598,21 @@
     </div>
     <div class="ob-bids" id="obBids"></div>
   </div>
+
+  <div class="orderbook-panel funding-panel" id="fundingPanel" style="display:none">
+    <div class="ob-header">
+      <span data-i18n="fundingLabel">Funding Rate</span>
+      <span class="funding-header-period" data-i18n="fundingLast30d">· Last 30 Days</span>
+    </div>
+    <div class="funding-panel-summary" id="fundingSummary">—</div>
+    <div class="ob-col-header">
+      <span data-i18n="fundingColTime">Time</span>
+      <span data-i18n="fundingColRate">Rate</span>
+      <span data-i18n="fundingColAnn">Ann.</span>
+    </div>
+    <div class="funding-empty-msg" id="fundingEmptyMsg" style="display:none" data-i18n="fundingSpotOnly">Funding rate is only available for perpetuals.</div>
+    <div class="funding-table-body" id="fundingTableBody"></div>
+  </div>
 </div>
 </div>
 
@@ -609,6 +634,7 @@
 <script src="js/indicators-overlay.js"></script>
 <script src="js/indicator-rsi.js"></script>
 <script src="js/indicator-macd.js"></script>
+<script src="js/indicator-funding.js"></script>
 <script src="js/indicators-ui.js"></script>
 <script src="js/pair-select.js"></script>
 <script src="js/replay.js"></script>

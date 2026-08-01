@@ -34,7 +34,7 @@
 <div class="banner" id="netBanner" data-i18n="netBannerDefault"></div>
 
 <div class="topbar">
-  <div class="brand"><span class="mark"></span><b>HL Chart</b><span>v0.6.0</span></div>
+  <div class="brand"><span class="mark"></span><b>HL Chart</b><span>v0.7.0</span></div>
 
   <div class="pairs" id="pairs">
     <button class="allpairs-toggle" id="allpairsToggle">
@@ -88,18 +88,6 @@
 
   <div class="spacer"></div>
 
-  <button class="app-settings-btn" id="replayToggleBtn" data-i18n-title="replayToggleTitle" title="Bar Replay">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><path d="M3.5 9a8.5 8.5 0 1 1-1 4.5"/><path d="M1 5v4h4"/></svg>
-  </button>
-
-  <button class="app-settings-btn" id="fundingToggleBtn" data-i18n-title="fundingToggleTitle" title="Funding Rate History">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
-  </button>
-
-  <button class="app-settings-btn" id="orderbookToggleBtn" data-i18n-title="orderbookToggleTitle" title="Order Book">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/><path d="M6 8h1M6 12h1M6 16h1M17 8h1M17 12h1M17 16h1"/></svg>
-  </button>
-
   <button class="app-settings-btn" id="appSettingsBtn" data-i18n-title="appSettingsTitle" title="Settings">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
@@ -131,6 +119,28 @@
     <span data-i18n="tradeBtn">Trade on Hyperliquid</span>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
   </a>
+
+  <div class="topbar-row2">
+    <button class="app-settings-btn" id="replayToggleBtn" data-i18n-title="replayToggleTitle" title="Bar Replay">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><path d="M3.5 9a8.5 8.5 0 1 1-1 4.5"/><path d="M1 5v4h4"/></svg>
+    </button>
+
+    <button class="app-settings-btn" id="fundingToggleBtn" data-i18n-title="fundingToggleTitle" title="Funding Rate History">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+    </button>
+
+    <button class="app-settings-btn" id="orderbookToggleBtn" data-i18n-title="orderbookToggleTitle" title="Order Book">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/><path d="M6 8h1M6 12h1M6 16h1M17 8h1M17 12h1M17 16h1"/></svg>
+    </button>
+
+    <button class="app-settings-btn" id="walletToggleBtn" data-i18n-title="walletToggleTitle" title="Wallet Tracker">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H4a1 1 0 0 0-1 1v9a2 2 0 0 0 2 2h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1z"/><path d="M3 7l1.5-3.5A1 1 0 0 1 5.4 3H16"/><circle cx="17.5" cy="14" r="1.4" fill="currentColor" stroke="none"/></svg>
+    </button>
+
+    <button class="app-settings-btn" id="pineToggleBtn" data-i18n-title="pineToggleTitle" title="Import Pine Script">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
+    </button>
+  </div>
 </div>
 
 <div class="main-grid layout-1" id="mainGrid">
@@ -581,6 +591,7 @@
         </div>
       </div>
     </div>
+    <div id="pineCustomPanes"></div>
   </div>
 
   <div class="orderbook-panel" id="orderbookPanel" style="display:none">
@@ -613,6 +624,41 @@
     <div class="funding-empty-msg" id="fundingEmptyMsg" style="display:none" data-i18n="fundingSpotOnly">Funding rate is only available for perpetuals.</div>
     <div class="funding-table-body" id="fundingTableBody"></div>
   </div>
+
+  <div class="orderbook-panel wallet-panel" id="walletPanel" style="display:none">
+    <div class="ob-header" data-i18n="walletLabel">Wallet Tracker</div>
+    <div class="wallet-input-row">
+      <input type="text" id="walletAddressInput" data-i18n-placeholder="walletAddressPlaceholder" placeholder="0x…" autocomplete="off" spellcheck="false">
+      <button type="button" id="walletTrackBtn" data-i18n="walletTrackBtn">Track</button>
+    </div>
+    <div class="wallet-status" id="walletStatus"></div>
+    <div class="funding-panel-summary wallet-summary" id="walletSummary" style="display:none"></div>
+    <div class="ob-col-header" id="walletColHeader" style="display:none">
+      <span data-i18n="walletColCoin">Coin</span>
+      <span data-i18n="walletColSide">Side</span>
+      <span data-i18n="walletColSize">Size</span>
+      <span data-i18n="walletColEntry">Entry</span>
+      <span data-i18n="walletColLiq">Liq.</span>
+      <span data-i18n="walletColPnl">PnL</span>
+      <span data-i18n="walletColLev">Lev</span>
+    </div>
+    <div class="funding-empty-msg" id="walletEmptyMsg" data-i18n="walletNotTracking">Enter a wallet address to track its live positions.</div>
+    <div class="wallet-positions" id="walletPositions"></div>
+  </div>
+
+  <div class="orderbook-panel pine-panel" id="pinePanel" style="display:none">
+    <div class="ob-header" data-i18n="pineLabel">Import Pine Script</div>
+    <div class="pine-panel-body">
+      <div class="pine-scope-note" data-i18n="pineScopeNote">Supports a broad subset of Pine v5: variables/var, if/for/while/switch, custom functions, arrays, and common ta.*/math.* functions. request.*, strategy.*, and libraries are not supported.</div>
+      <textarea id="pineSourceInput" class="pine-textarea" spellcheck="false" placeholder="//@version=6&#10;indicator(&quot;My Script&quot;, overlay=true)&#10;len = input.int(14, &quot;Length&quot;)&#10;plot(ta.sma(close, len))"></textarea>
+      <div class="pine-error-box" id="pineErrorBox" style="display:none"></div>
+      <div class="pine-action-row">
+        <input type="text" id="pineNameInput" class="pine-name-input" data-i18n-placeholder="pineNamePlaceholder" placeholder="Script name">
+        <button type="button" id="pineRunBtn" class="pine-run-btn" data-i18n="pineRunBtn">Run &amp; Save</button>
+      </div>
+    </div>
+    <div class="pine-scripts-list" id="pineScriptsList"></div>
+  </div>
 </div>
 </div>
 
@@ -637,6 +683,11 @@
 <script src="js/indicator-funding.js"></script>
 <script src="js/indicators-ui.js"></script>
 <script src="js/pair-select.js"></script>
+<script src="js/wallet-tracker.js"></script>
+<script src="js/pine-engine.js"></script>
+<script src="js/pine-interpreter.js"></script>
+<script src="js/pine-builtins.js"></script>
+<script src="js/pine-import.js"></script>
 <script src="js/replay.js"></script>
 <script src="js/chart-types.js"></script>
 <script src="js/drawings.js"></script>

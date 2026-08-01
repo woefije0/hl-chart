@@ -44,6 +44,15 @@
     gap:8px;
     margin-right: 6px;
   }
+  .topbar-row2{
+    flex-basis:100%;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding-top:8px;
+    margin-top:2px;
+    border-top:1px solid var(--line);
+  }
   .brand .mark{
     width:9px; height:9px; border-radius:2px;
     background: var(--accent);
@@ -649,3 +658,125 @@
   @media (max-width: 860px){
     .orderbook-panel{ display:none !important; }
   }
+
+  /* ---------- 지갑 추적(Wallet Tracker) 패널 ---------- */
+  /* .orderbook-panel의 폭/배경/테두리를 그대로 물려받음(마크업에서 클래스 함께 씀) */
+  .wallet-panel{ width:270px; }
+  .wallet-input-row{
+    display:flex; gap:6px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--line);
+    flex-shrink:0;
+  }
+  .wallet-input-row input{
+    flex:1; min-width:0;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius:6px;
+    padding:7px 8px;
+    color:var(--text);
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    outline:none;
+  }
+  .wallet-input-row input:focus{ border-color: var(--accent-dim); }
+  .wallet-input-row input:disabled{ opacity:.6; }
+  .wallet-input-row button{
+    flex-shrink:0;
+    padding:0 10px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    background: var(--panel-2);
+    color:var(--accent);
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px; font-weight:700;
+    cursor:pointer;
+  }
+  .wallet-input-row button:hover{ background: var(--panel); border-color: var(--accent-dim); }
+  .wallet-input-row button.wallet-untrack{ color: var(--down); }
+  .wallet-status{
+    display:none; align-items:center;
+    padding:6px 10px;
+    font-size:10.5px; color:var(--text-dim);
+    border-bottom:1px solid var(--line);
+    flex-shrink:0;
+  }
+  .wallet-panel .ob-col-header span{ flex:1; text-align:right; }
+  .wallet-panel .ob-col-header span:nth-child(1),
+  .wallet-panel .ob-col-header span:nth-child(2){ text-align:left; }
+  .wallet-positions{
+    display:flex; flex-direction:column;
+    overflow-y:auto; flex:1; min-height:0;
+  }
+  .wallet-row{
+    display:flex; align-items:center; gap:2px;
+    padding:5px 10px;
+    font-size:10.5px; line-height:1.4;
+    border-bottom:1px solid rgba(255,255,255,0.03);
+    cursor:pointer;
+  }
+  .wallet-row:hover{ background: var(--panel-2); }
+  .wallet-row.current{ background: rgba(79,209,197,0.08); }
+  .wallet-row span{ flex:1; text-align:right; }
+  .wallet-coin{ text-align:left !important; font-weight:700; }
+  .wallet-side{ text-align:left !important; font-weight:700; font-size:9.5px; }
+  .wallet-side.long{ color: var(--up); }
+  .wallet-side.short{ color: var(--down); }
+  .wallet-liq{ color: var(--down); }
+  .wallet-pnl-pos{ color: var(--up); }
+  .wallet-pnl-neg{ color: var(--down); }
+  .wallet-panel .funding-empty-msg{ display:flex; }
+
+  /* ---------- PineScript 가져오기(Import) 패널 ---------- */
+  .pine-panel{ width:320px; }
+  .pine-panel-body{ padding:10px; border-bottom:1px solid var(--line); display:flex; flex-direction:column; gap:8px; }
+  .pine-scope-note{ font-size:10px; line-height:1.5; color:var(--text-dim); background:var(--panel-2); border-radius:6px; padding:7px 8px; }
+  .pine-textarea{
+    width:100%; min-height:140px; resize:vertical;
+    background: var(--panel-2); border:1px solid var(--line); border-radius:6px;
+    padding:8px; color:var(--text); font-family:'JetBrains Mono', monospace; font-size:11px; line-height:1.5;
+    outline:none;
+  }
+  .pine-textarea:focus{ border-color: var(--accent-dim); }
+  .pine-error-box{
+    background: rgba(239,111,111,0.1); border:1px solid rgba(239,111,111,0.4); color:var(--down);
+    border-radius:6px; padding:7px 8px; font-size:10.5px; line-height:1.5; white-space:pre-wrap;
+  }
+  .pine-inputs-box{ display:flex; flex-direction:column; gap:6px; }
+  .pine-input-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:10.5px; color:var(--text-dim); }
+  .pine-input-row input[type="number"], .pine-input-row input[type="text"]{
+    width:100px; background:var(--panel-2); border:1px solid var(--line); border-radius:5px;
+    padding:4px 6px; color:var(--text); font-family:'JetBrains Mono', monospace; font-size:11px; outline:none;
+  }
+  .pine-input-row input[type="checkbox"]{ width:16px; height:16px; }
+  .pine-action-row{ display:flex; gap:6px; }
+  .pine-name-input{
+    flex:1; min-width:0; background:var(--panel-2); border:1px solid var(--line); border-radius:6px;
+    padding:7px 8px; color:var(--text); font-family:'JetBrains Mono', monospace; font-size:11px; outline:none;
+  }
+  .pine-run-btn{
+    flex-shrink:0; padding:0 12px; border-radius:6px; border:1px solid var(--line);
+    background: var(--panel-2); color:var(--accent); font-family:'JetBrains Mono', monospace;
+    font-size:11px; font-weight:700; cursor:pointer;
+  }
+  .pine-run-btn:hover{ background:var(--panel); border-color:var(--accent-dim); }
+  .pine-scripts-list{ display:flex; flex-direction:column; overflow-y:auto; flex:1; min-height:0; }
+  .pine-script-row{
+    display:flex; align-items:center; gap:6px; padding:8px 10px;
+    border-bottom:1px solid rgba(255,255,255,0.03); font-size:11px;
+  }
+  .pine-script-row .pine-script-name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600; cursor:pointer; }
+  .pine-script-row .pine-script-name:hover{ color:var(--accent); }
+  .pine-script-row.error .pine-script-name{ color:var(--down); }
+  .pine-script-icon{
+    background:none; border:none; padding:3px; margin:0; cursor:pointer; flex-shrink:0;
+    color:var(--text-dim); display:flex; align-items:center; justify-content:center; border-radius:4px;
+  }
+  .pine-script-icon:hover{ color:var(--text); background:rgba(255,255,255,0.08); }
+  .pine-script-icon.active{ color:var(--accent); }
+  .pine-script-icon svg{ width:13px; height:13px; }
+
+  /* 가져온 지표 전용 패널(비-overlay 스크립트) — .rsi-pane 스타일을 그대로 물려받아 씀 */
+  .pine-pane .pine-pane-chart{ position:absolute; inset:0; }
+  .pine-pane-legend{ pointer-events:none; }
+  .pine-pane-legend .legend-name{ pointer-events:auto; }

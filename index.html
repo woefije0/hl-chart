@@ -8,6 +8,8 @@
 <link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="description" content="Free real-time chart terminal for Hyperliquid. Live candles, indicators, EN/KR support.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://woefije0.github.io/hl-chart/">
 
 <!-- Open Graph / Twitter Card: link preview cards -->
 <meta property="og:title" content="HL Chart — Hyperliquid Terminal">
@@ -19,6 +21,19 @@
 <meta name="twitter:title" content="HL Chart — Hyperliquid Terminal">
 <meta name="twitter:description" content="Free real-time chart terminal for Hyperliquid. Live candles, indicators, EN/KR support.">
 <meta name="twitter:image" content="https://woefije0.github.io/hl-chart/og_banner.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "HL Chart",
+  "url": "https://woefije0.github.io/hl-chart/",
+  "description": "Free real-time chart terminal for Hyperliquid. Live candles, indicators, EN/KR support.",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Any (Web Browser)",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,7 +49,7 @@
 <div class="banner" id="netBanner" data-i18n="netBannerDefault"></div>
 
 <div class="topbar">
-  <div class="brand"><span class="mark"></span><b>HL Chart</b><span>v0.7.0</span></div>
+  <div class="brand"><span class="mark"></span><b>HL Chart</b><span>v0.7.1</span></div>
 
   <div class="pairs" id="pairs">
     <button class="allpairs-toggle" id="allpairsToggle">
@@ -595,6 +610,7 @@
   </div>
 
   <div class="orderbook-panel" id="orderbookPanel" style="display:none">
+    <div class="side-panel-resize-handle"></div>
     <div class="ob-header" data-i18n="orderbookLabel">Order Book</div>
     <div class="ob-col-header">
       <span data-i18n="obPrice">Price</span>
@@ -611,6 +627,7 @@
   </div>
 
   <div class="orderbook-panel funding-panel" id="fundingPanel" style="display:none">
+    <div class="side-panel-resize-handle"></div>
     <div class="ob-header">
       <span data-i18n="fundingLabel">Funding Rate</span>
       <span class="funding-header-period" data-i18n="fundingLast30d">· Last 30 Days</span>
@@ -626,6 +643,7 @@
   </div>
 
   <div class="orderbook-panel wallet-panel" id="walletPanel" style="display:none">
+    <div class="side-panel-resize-handle"></div>
     <div class="ob-header" data-i18n="walletLabel">Wallet Tracker</div>
     <div class="wallet-input-row">
       <input type="text" id="walletAddressInput" data-i18n-placeholder="walletAddressPlaceholder" placeholder="0x…" autocomplete="off" spellcheck="false">
@@ -647,13 +665,19 @@
   </div>
 
   <div class="orderbook-panel pine-panel" id="pinePanel" style="display:none">
+    <div class="side-panel-resize-handle"></div>
     <div class="ob-header" data-i18n="pineLabel">Import Pine Script</div>
     <div class="pine-panel-body">
-      <div class="pine-scope-note" data-i18n="pineScopeNote">Supports a broad subset of Pine v5: variables/var, if/for/while/switch, custom functions, arrays, and common ta.*/math.* functions. request.*, strategy.*, and libraries are not supported.</div>
-      <textarea id="pineSourceInput" class="pine-textarea" spellcheck="false" placeholder="//@version=6&#10;indicator(&quot;My Script&quot;, overlay=true)&#10;len = input.int(14, &quot;Length&quot;)&#10;plot(ta.sma(close, len))"></textarea>
+      <div class="pine-scope-note-row">
+        <div class="pine-scope-note" data-i18n="pineScopeNote">Supports a broad subset of Pine v5: variables/var, if/for/while/switch, custom functions, arrays, and common ta.*/math.* functions. request.*, strategy.*, and libraries are not supported.</div>
+        <button type="button" id="pineClearBtn" class="pine-clear-btn" data-i18n-title="pineClearBtn" title="Clear code">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+        </button>
+      </div>
+      <textarea id="pineSourceInput" class="pine-textarea" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="//@version=6&#10;indicator(&quot;My Script&quot;, overlay=true)&#10;len = input.int(14, &quot;Length&quot;)&#10;plot(ta.sma(close, len))"></textarea>
       <div class="pine-error-box" id="pineErrorBox" style="display:none"></div>
       <div class="pine-action-row">
-        <input type="text" id="pineNameInput" class="pine-name-input" data-i18n-placeholder="pineNamePlaceholder" placeholder="Script name">
+        <input type="text" id="pineNameInput" class="pine-name-input" autocomplete="off" data-i18n-placeholder="pineNamePlaceholder" placeholder="Script name">
         <button type="button" id="pineRunBtn" class="pine-run-btn" data-i18n="pineRunBtn">Run &amp; Save</button>
       </div>
     </div>

@@ -765,6 +765,15 @@
   }
   .pine-input-row input[type="checkbox"]{ width:16px; height:16px; }
   .pine-action-row{ display:flex; gap:6px; }
+  .pine-version-select{
+    flex-shrink:0; max-width:118px; background:var(--panel-2); border:1px solid var(--line); border-radius:6px;
+    padding:7px 4px; color:var(--text-dim); font-family:'JetBrains Mono', monospace; font-size:10.5px; outline:none; cursor:pointer;
+  }
+  .pine-version-select:hover{ border-color:var(--accent-dim); }
+  .pine-script-version-badge{
+    flex-shrink:0; font-size:9.5px; color:var(--text-dim); background:var(--panel-2);
+    border:1px solid var(--line); border-radius:4px; padding:1px 4px; margin-right:2px;
+  }
   .pine-name-input{
     flex:1; min-width:0; background:var(--panel-2); border:1px solid var(--line); border-radius:6px;
     padding:7px 8px; color:var(--text); font-family:'JetBrains Mono', monospace; font-size:11px; outline:none;
@@ -797,5 +806,6 @@
      (없으면 flex가 컨테이너를 계속 찌그러뜨려서 높이 드래그가 안 먹는 것처럼 보인다) */
   #pineCustomPanes{ display:flex; flex-direction:column; flex-shrink:0; }
   .pine-pane .pine-pane-chart{ position:absolute; inset:0; }
+  .pine-pane-markers{ position:absolute; inset:0; pointer-events:none; z-index:5; }
   .pine-pane-legend{ pointer-events:none; }
   .pine-pane-legend .legend-item{ pointer-events:auto; }

@@ -49,7 +49,7 @@
 <div class="banner" id="netBanner" data-i18n="netBannerDefault"></div>
 
 <div class="topbar">
-  <div class="brand"><span class="mark"></span><b>HL Chart</b><span>v0.7.1</span></div>
+  <div class="brand"><span class="mark"></span><b>HL Chart</b><span>v0.7.2</span></div>
 
   <div class="pairs" id="pairs">
     <button class="allpairs-toggle" id="allpairsToggle">
@@ -127,6 +127,13 @@
     </div>
     <div class="legend-settings-row">
       <button type="button" class="legend-add-line-btn" id="bgResetBtn" data-i18n="appSettingsBgReset">Reset background</button>
+    </div>
+    <div class="legend-settings-divider"></div>
+    <div class="legend-settings-row">
+      <a class="legend-add-line-btn" id="xLinkBtn" href="https://x.com/woefije" target="_blank" rel="noopener noreferrer" style="display:flex; align-items:center; justify-content:center; gap:6px; text-decoration:none;">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M18.9 2H22l-7.6 8.7L23.3 22H16.6l-5.2-6.8L5.4 22H2.3l8.2-9.3L1.7 2h6.9l4.7 6.2L18.9 2zm-1.2 18h1.7L7.4 4H5.6l12.1 16z"/></svg>
+        <span data-i18n="appSettingsFollowX">Follow on X</span>
+      </a>
     </div>
   </div>
 
@@ -677,6 +684,15 @@
       <textarea id="pineSourceInput" class="pine-textarea" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" placeholder="//@version=6&#10;indicator(&quot;My Script&quot;, overlay=true)&#10;len = input.int(14, &quot;Length&quot;)&#10;plot(ta.sma(close, len))"></textarea>
       <div class="pine-error-box" id="pineErrorBox" style="display:none"></div>
       <div class="pine-action-row">
+        <select id="pineVersionSelect" class="pine-version-select" data-i18n-title="pineVersionTitle" title="Pine Script version">
+          <option value="auto" id="pineVersionAutoOption">Auto-detect</option>
+          <option value="1">v1</option>
+          <option value="2">v2</option>
+          <option value="3">v3</option>
+          <option value="4">v4</option>
+          <option value="5">v5</option>
+          <option value="6">v6</option>
+        </select>
         <input type="text" id="pineNameInput" class="pine-name-input" autocomplete="off" data-i18n-placeholder="pineNamePlaceholder" placeholder="Script name">
         <button type="button" id="pineRunBtn" class="pine-run-btn" data-i18n="pineRunBtn">Run &amp; Save</button>
       </div>

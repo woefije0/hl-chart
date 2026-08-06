@@ -809,3 +809,35 @@
   .pine-pane-markers{ position:absolute; inset:0; pointer-events:none; z-index:5; }
   .pine-pane-legend{ pointer-events:none; }
   .pine-pane-legend .legend-item{ pointer-events:auto; }
+
+  /* ---------- Pine table.new() 오버레이 ----------
+     9개 위치(position.top_left … position.bottom_right)마다 구역을 하나 두고, 같은 자리에
+     표가 여러 개면 세로로 쌓는다. 구역 자체는 클릭을 통과시키고(pointer-events:none) 표 본체만
+     이벤트를 받는다 — 안 그러면 표가 없는 넓은 영역이 차트 드래그를 막아버린다.
+     left/right 값은 가격축 폭만큼 pine-import.js가 인라인으로 다시 채운다. */
+  .pine-table-zone{
+    position:absolute; z-index:6; pointer-events:none;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .pine-table-zone[data-v="top"]{ top:8px; }
+  .pine-table-zone[data-v="bottom"]{ bottom:8px; }
+  .pine-table-zone[data-v="middle"]{ top:50%; transform:translateY(-50%); }
+  .pine-table-zone[data-h="left"]{ left:8px; align-items:flex-start; }
+  .pine-table-zone[data-h="right"]{ right:8px; align-items:flex-end; }
+  .pine-table-zone[data-h="center"]{ left:50%; transform:translateX(-50%); align-items:center; }
+  /* 가로·세로 모두 가운데인 경우엔 두 transform을 합쳐야 한다 (각각 쓰면 뒤엣것이 앞엣것을 덮어씀) */
+  .pine-table-zone[data-v="middle"][data-h="center"]{ transform:translate(-50%,-50%); }
+
+  .pine-table{
+    display:grid; pointer-events:auto;
+    background: rgba(16,20,27,0.82);
+    border-radius:5px; overflow:hidden;
+    font-family:'JetBrains Mono', monospace;
+    box-shadow:0 2px 10px rgba(0,0,0,0.35);
+    max-width:100%;
+  }
+  .pine-table-cell{
+    display:flex; justify-content:center; align-items:center;
+    padding:2px 7px; line-height:1.45;
+    color:var(--text); white-space:pre; /* 표 안의 공백 정렬(옛 스크립트들이 흔히 쓴다)을 살린다 */
+  }

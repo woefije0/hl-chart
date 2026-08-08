@@ -56,7 +56,7 @@
 <div class="banner" id="netBanner" data-i18n="netBannerDefault"></div>
 
 <div class="topbar">
-  <div class="brand"><span class="mark"></span><b>HL Chart</b><span>v0.7.3</span></div>
+  <div class="brand"><span class="mark"></span><b>HL Chart</b><span>v0.8.0</span></div>
 
   <div class="pairs" id="pairs">
     <button class="allpairs-toggle" id="allpairsToggle">
@@ -166,6 +166,14 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H4a1 1 0 0 0-1 1v9a2 2 0 0 0 2 2h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1z"/><path d="M3 7l1.5-3.5A1 1 0 0 1 5.4 3H16"/><circle cx="17.5" cy="14" r="1.4" fill="currentColor" stroke="none"/></svg>
     </button>
 
+    <button class="app-settings-btn" id="whaleToggleBtn" data-i18n-title="whaleToggleTitle" title="Whale Trades">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l4 4V6L6 10H4a1 1 0 0 0-1 1z"/><path d="M15 8a4 4 0 0 1 0 8"/><path d="M18 5a8 8 0 0 1 0 14"/></svg>
+    </button>
+
+    <button class="app-settings-btn" id="liqHeatmapToggleBtn" data-i18n-title="liqHeatmapToggleTitle" title="Liquidation Heatmap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="4.5" rx="1"/><rect x="3" y="9.75" width="18" height="4.5" rx="1" opacity="0.65"/><rect x="3" y="15.5" width="18" height="4.5" rx="1" opacity="0.35"/></svg>
+    </button>
+
     <button class="app-settings-btn" id="pineToggleBtn" data-i18n-title="pineToggleTitle" title="Import Pine Script">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
     </button>
@@ -231,6 +239,9 @@
       <div class="chart-loading-overlay" id="chartLoadingOverlay" style="display:none">
         <div class="chart-loading-spinner"></div>
       </div>
+      <!-- #chart보다 앞(DOM 순서)에 있고 z-index를 지정하지 않아야 캔들 뒤에 깔린다.
+           z-index를 주면(#drawOverlay처럼) DOM 순서와 무관하게 캔들 위로 올라와 버리므로 절대 추가하지 말 것. -->
+      <canvas id="liqHeatmapOverlay"></canvas>
       <div id="chart"></div>
       <div class="volume-axis-label" id="volumeAxisLabel" style="display:none"></div>
       <canvas id="drawOverlay"></canvas>
@@ -373,6 +384,39 @@
             <div class="legend-settings-row">
               <label><input type="checkbox" id="bbShowLower" checked><span data-i18n="bbLowerLine">Lower</span></label>
               <input type="color" class="legend-color-dot" id="bbColorLower" value="#089981">
+            </div>
+          </div>
+        </div>
+        <div class="legend-item" id="legendLiqHeatmap" style="display:none">
+          <span class="legend-name" data-i18n="liqHeatmapLabel">Liquidation Heatmap</span>
+          <span class="legend-icons">
+            <button class="legend-icon" id="legendLiqHeatmapEyeBtn" data-i18n-title="legendToggleVisible" title="Toggle visibility">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="legend-icon" id="legendLiqHeatmapGearBtn" data-i18n-title="legendSettings" title="Settings">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+            <button class="legend-icon" id="legendLiqHeatmapTrashBtn" data-i18n-title="legendRemove" title="Remove">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+            </button>
+          </span>
+          <div class="legend-settings" id="legendLiqHeatmapSettings" style="width:250px">
+            <div class="legend-settings-title" data-i18n="liqHeatmapSettingsTitle">LIQUIDATION HEATMAP</div>
+            <div class="legend-settings-row field">
+              <span class="field-label" data-i18n="liqHeatmapLookback">Lookback (days)</span>
+              <input type="number" class="legend-number" id="liqHeatmapLookback" min="3" max="60" step="1" value="21">
+            </div>
+            <div class="legend-settings-row field">
+              <span class="field-label" data-i18n="liqHeatmapHalfLife">Decay Half-life (days)</span>
+              <input type="number" class="legend-number" id="liqHeatmapHalfLife" min="1" max="30" step="1" value="5">
+            </div>
+            <div class="legend-settings-row field">
+              <span class="field-label" data-i18n="liqHeatmapOpacity">Opacity</span>
+              <input type="range" class="legend-number" id="liqHeatmapOpacity" min="0.1" max="1" step="0.05" value="0.75">
+            </div>
+            <div class="legend-settings-divider"></div>
+            <div class="legend-settings-row" style="opacity:.7; font-size:11px; line-height:1.4;" data-i18n="liqHeatmapDisclaimer">
+              Modeled estimate anchored to real open interest — not actual per-trader liquidation data.
             </div>
           </div>
         </div>
@@ -665,6 +709,10 @@
     </div>
     <div class="wallet-status" id="walletStatus"></div>
     <div class="funding-panel-summary wallet-summary" id="walletSummary" style="display:none"></div>
+    <div class="wallet-tabs" id="walletTabs" style="display:none">
+      <button type="button" class="wallet-tab active" id="walletTabPositions" data-i18n="walletTabPositions">Positions</button>
+      <button type="button" class="wallet-tab" id="walletTabHistory" data-i18n="walletTabHistory">History</button>
+    </div>
     <div class="ob-col-header" id="walletColHeader" style="display:none">
       <span data-i18n="walletColCoin">Coin</span>
       <span data-i18n="walletColSide">Side</span>
@@ -674,8 +722,35 @@
       <span data-i18n="walletColPnl">PnL</span>
       <span data-i18n="walletColLev">Lev</span>
     </div>
+    <div class="ob-col-header" id="walletHistoryColHeader" style="display:none">
+      <span data-i18n="walletColCoin">Coin</span>
+      <span data-i18n="walletHistColType">Type</span>
+      <span data-i18n="walletColSize">Size</span>
+      <span data-i18n="walletHistColPrice">Price</span>
+      <span data-i18n="walletHistColPnl">PnL</span>
+    </div>
     <div class="funding-empty-msg" id="walletEmptyMsg" data-i18n="walletNotTracking">Enter a wallet address to track its live positions.</div>
     <div class="wallet-positions" id="walletPositions"></div>
+  </div>
+
+  <div class="orderbook-panel wallet-panel whale-panel" id="whalePanel" style="display:none">
+    <div class="side-panel-resize-handle"></div>
+    <div class="ob-header" data-i18n="whaleLabel">Whale Trades</div>
+    <div class="whale-threshold-row">
+      <span data-i18n="whaleThresholdLabel">Min size (USD)</span>
+      <input type="number" id="whaleThresholdInput" min="0" step="1000" autocomplete="off">
+      <button type="button" id="whaleThresholdApplyBtn" data-i18n="whaleApplyBtn">Apply</button>
+    </div>
+    <div class="whale-threshold-current" id="whaleThresholdCurrent"></div>
+    <div class="ob-col-header">
+      <span data-i18n="whaleColTime">Time</span>
+      <span data-i18n="whaleColSide">Side</span>
+      <span data-i18n="whaleColPrice">Price</span>
+      <span data-i18n="whaleColNotional">Value</span>
+      <span data-i18n="whaleColAddr">Address</span>
+    </div>
+    <div class="funding-empty-msg" id="whaleEmptyMsg" data-i18n="whaleEmptyMsg">Watching for large trades on this pair…</div>
+    <div class="wallet-positions" id="whaleRows"></div>
   </div>
 
   <div class="orderbook-panel pine-panel" id="pinePanel" style="display:none">
@@ -728,9 +803,11 @@
 <script src="js/indicator-rsi.js"></script>
 <script src="js/indicator-macd.js"></script>
 <script src="js/indicator-funding.js"></script>
+<script src="js/indicator-liq-heatmap.js"></script>
 <script src="js/indicators-ui.js"></script>
 <script src="js/pair-select.js"></script>
 <script src="js/wallet-tracker.js"></script>
+<script src="js/whale-tracker.js"></script>
 <script src="js/pine-engine.js"></script>
 <script src="js/pine-interpreter.js"></script>
 <script src="js/pine-builtins.js"></script>

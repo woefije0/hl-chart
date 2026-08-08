@@ -511,6 +511,8 @@
   .layout-switch-col{ display:flex; flex-direction:column; align-items:center; gap:2px; }
   .layout-btn{ font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:700; }
   #drawOverlay{ position:absolute; inset:0; pointer-events:none; z-index:6; }
+  /* z-index를 절대 지정하지 않는다 — #chart보다 DOM상 앞에 있고 z-index:auto라서 캔들 뒤에 깔린다 (index.html 주석 참고) */
+  #liqHeatmapOverlay{ position:absolute; inset:0; pointer-events:none; }
   .draw-options-popup{
     position:absolute; z-index:20; display:flex; align-items:center; gap:2px;
     background: var(--panel); border:1px solid var(--line); border-radius:8px;
@@ -707,6 +709,25 @@
     border-bottom:1px solid var(--line);
     flex-shrink:0;
   }
+  .wallet-tabs{
+    display:flex; gap:4px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--line);
+    flex-shrink:0;
+  }
+  .wallet-tab{
+    flex:1;
+    padding:5px 0;
+    border-radius:6px;
+    border:1px solid var(--line);
+    background: var(--panel-2);
+    color:var(--text-dim);
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px; font-weight:700;
+    cursor:pointer;
+  }
+  .wallet-tab:hover{ color:var(--text); }
+  .wallet-tab.active{ color:var(--accent); border-color:var(--accent-dim); background: rgba(79,209,197,0.1); }
   .wallet-panel .ob-col-header span{ flex:1; text-align:right; }
   .wallet-panel .ob-col-header span:nth-child(1),
   .wallet-panel .ob-col-header span:nth-child(2){ text-align:left; }
@@ -732,6 +753,53 @@
   .wallet-pnl-pos{ color: var(--up); }
   .wallet-pnl-neg{ color: var(--down); }
   .wallet-panel .funding-empty-msg{ display:flex; }
+
+  /* ---------- 대형거래(고래) 감지 패널 ---------- */
+  /* .orderbook-panel/.wallet-panel의 배경/테두리/행 스타일을 그대로 물려받음(마크업에서 클래스 함께 씀) */
+  .whale-panel{ width:300px; }
+  .whale-threshold-row{
+    display:flex; align-items:center; gap:6px;
+    padding:8px 10px;
+    border-bottom:1px solid var(--line);
+    font-size:10.5px; color:var(--text-dim);
+    flex-shrink:0;
+  }
+  .whale-threshold-row input{
+    flex:1; min-width:0;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius:6px;
+    padding:6px 8px;
+    color:var(--text);
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    outline:none;
+  }
+  .whale-threshold-row input:focus{ border-color: var(--accent-dim); }
+  .whale-threshold-row button{
+    flex-shrink:0;
+    padding:0 10px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    background: var(--panel-2);
+    color:var(--accent);
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px; font-weight:700;
+    cursor:pointer;
+  }
+  .whale-threshold-row button:hover{ background: var(--panel); border-color: var(--accent-dim); }
+  .whale-threshold-current{
+    padding:0 10px 8px;
+    font-size:10px; color:var(--text-dim);
+    border-bottom:1px solid var(--line);
+    flex-shrink:0;
+    transition: color .15s;
+  }
+  .whale-threshold-current.flash{ color: var(--accent); font-weight:700; }
+  /* .wallet-panel .ob-col-header 규칙이 1/2번째 칸(Time/Side)을 왼쪽 정렬해줌 — 나머지는 오른쪽 정렬 그대로 씀 */
+  .whale-row span:first-child{ text-align:left; color:var(--text-dim); }
+  .whale-addr{ font-size:9.5px; color:var(--text-dim); }
+  .whale-panel .funding-empty-msg{ display:flex; }
 
   /* ---------- PineScript 가져오기(Import) 패널 ---------- */
   .pine-panel{ width:320px; }
